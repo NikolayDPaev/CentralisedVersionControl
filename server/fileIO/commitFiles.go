@@ -17,7 +17,7 @@ func extractMetadata(fileInfo fs.FileInfo) (*commit.Metadata, error) {
 	}
 	defer file.Close()
 
-	result, err := commit.NewMetadataFromFile(file, fileInfo.Name())
+	result, err := commit.ReadMetadata(file, fileInfo.Name())
 	if err != nil {
 		return nil, err
 	}
