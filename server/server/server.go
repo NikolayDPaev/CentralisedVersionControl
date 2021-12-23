@@ -28,7 +28,9 @@ func (s *Server) Stop() {
 }
 
 func handleClient(c net.Conn) {
-	clienthandler.Communication(c, c)
+	if err := clienthandler.Communication(c, c); err != nil {
+		log.Println(err)
+	}
 }
 
 func (s *Server) runServer() {
