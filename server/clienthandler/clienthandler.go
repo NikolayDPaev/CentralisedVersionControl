@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/fileIO"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
 
@@ -15,7 +14,7 @@ const (
 )
 
 func Communication(reader io.Reader, writer io.Writer) error {
-	opCode, err := netIO.ReceiveUint32(reader)
+	opCode, err := netIO.ReceiveVarInt(reader)
 	if err != nil {
 		return fmt.Errorf("could not receive opcode: %w", err)
 	}
@@ -23,23 +22,11 @@ func Communication(reader io.Reader, writer io.Writer) error {
 	switch opCode {
 	case GET_COMMIT_LIST_CODE:
 		err = sendCommitList(writer)
+	case UPLOAD_COMMIT:
+		err = receiveCommit(reader, writer)
+	case DOWNLOAD_COMMIT:
+		err = sendCommit(reader, writer)
 	}
 
 	return err
-}
-
-func sendCommitList(writer io.Writer) error {
-	metadataList := fileIO.CommitList()
-	err := netIO.SendUint32(uint32(len(metadataList)), writer)
-	if err != nil {
-		return fmt.Errorf("could not send metadata list length: %w", err)
-	}
-
-	for _, entry := range metadataList {
-		err := netIO.SendString(entry.String(), writer)
-		if err != nil {
-			return fmt.Errorf("could not send metadata entry: %w", err)
-		}
-	}
-	return nil
 }
