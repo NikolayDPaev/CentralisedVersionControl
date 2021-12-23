@@ -1,8 +1,7 @@
-package files
+package fileIO
 
 import (
 	"fmt"
-	"io"
 	"io/fs"
 	"log"
 	"os"
@@ -53,18 +52,27 @@ func CommitList() []*commit.Metadata {
 	return result
 }
 
-func CommitReader(commitId string) (io.Reader, error) {
-	reader, err := os.Open("commits/" + commitId)
+func OpenCommit(commitId string) (*os.File, error) {
+	file, err := os.Open("commits/" + commitId)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open commit: %w", err)
+		return nil, fmt.Errorf("cannot open commit %s: %w", commitId, err)
 	}
-	return reader, nil
+	return file, nil
 }
 
-func NewCommitWriter(commitId string) (io.Writer, error) {
-	writer, err := os.Create("commits/" + commitId)
+func NewCommit(commitId string) (*os.File, error) {
+	file, err := os.Create("commits/" + commitId)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create commit file: %w", err)
+		return nil, fmt.Errorf("cannot create commit file %s: %w", commitId, err)
 	}
-	return writer, nil
+	return file, nil
+}
+
+func CommitSize(commitId string) (int64, error) {
+	fileInfo, err := os.Stat("commits/" + commitId)
+	if err != nil {
+		return 0, fmt.Errorf("cannot get commit %s file info: %w", commitId, err)
+	}
+
+	return fileInfo.Size(), nil
 }
