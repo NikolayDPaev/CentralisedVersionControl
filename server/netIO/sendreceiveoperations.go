@@ -55,15 +55,6 @@ func SendUint32(num uint32, writer io.Writer) error {
 	return nil
 }
 
-func SendString(str string, writer io.Writer) error {
-	err := SendUint32(uint32(len(str)), writer)
-	if err != nil {
-		return fmt.Errorf("could not send length of string: %w", err)
-	}
-	writer.Write([]byte(str))
-	return nil
-}
-
 func ReceiveUint32(reader io.Reader) (uint32, error) {
 	bytes := make([]byte, UINT_32_BYTE_LEN)
 	n, err := reader.Read(bytes)
@@ -75,6 +66,34 @@ func ReceiveUint32(reader io.Reader) (uint32, error) {
 		return 0, fmt.Errorf("could not receive number: %w", err)
 	}
 	return binary.BigEndian.Uint32(bytes), nil
+}
+
+func SendString(str string, writer io.Writer) error {
+	err := SendUint32(uint32(len(str)), writer)
+	if err != nil {
+		return fmt.Errorf("could not send length of string: %w", err)
+	}
+	writer.Write([]byte(str))
+	return nil
+}
+
+func ReceiveString(reader io.Reader) (string, error) {
+	len, err := ReceiveUint32(reader)
+	if err != nil {
+		return "", fmt.Errorf("could not receive length of string: %w", err)
+	}
+
+	bytes := make([]byte, len)
+	n, err := reader.Read(bytes)
+
+	if n != int(len) {
+		return "", errors.New("length does not match")
+	}
+	if err != nil {
+		return "", fmt.Errorf("could not receive string: %w", err)
+	}
+
+	return string(bytes), nil
 }
 
 func SendFileData(fileReader io.Reader, fileLength int64, netWriter io.Writer) error {
