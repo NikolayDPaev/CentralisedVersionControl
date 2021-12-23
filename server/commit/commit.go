@@ -16,7 +16,7 @@ type Commit struct {
 func ReadCommit(reader io.Reader) (*Commit, error) {
 	id, err := netIO.ReceiveString(reader)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read hash of commit: %w", err)
+		return nil, fmt.Errorf("cannot read id of commit: %w", err)
 	}
 
 	metadata, err := ReadMetadata(reader, id)
@@ -38,7 +38,7 @@ func (c *Commit) Id() string {
 
 func (c *Commit) Write(writer io.Writer) error {
 	if err := c.metadata.Write(writer); err != nil {
-		return fmt.Errorf("cannot write commit: %w", err)
+		return fmt.Errorf("cannot write commit metadata: %w", err)
 	}
 
 	if err := netIO.SendString(c.tree, writer); err != nil {
@@ -57,4 +57,8 @@ func (c *Commit) ExtractBlobIds() []string { // regex ????
 	}
 
 	return blobIds
+}
+
+func (c Commit) String() string {
+	return c.metadata.String()
 }
