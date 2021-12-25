@@ -20,12 +20,12 @@ func Init() error {
 	address := scanner.Text()
 
 	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("Error reading user input: %w", scanner.Err())
+		return fmt.Errorf("error reading user input: %w", scanner.Err())
 	}
 
 	metafileData := commands.MetafileData{Username: username, Address: address}
 	if err := metafileData.Save(); err != nil {
-		return fmt.Errorf("Error initializing: %w", scanner.Err())
+		return fmt.Errorf("error initializing: %w", scanner.Err())
 	}
 	return nil
 }
@@ -42,7 +42,7 @@ func CommitList() error {
 	}
 	defer c.Close()
 
-	commitList, err := commands.GetCommitList(c)
+	commitList, err := commands.GetCommitList(c, c)
 	if err != nil {
 		return fmt.Errorf("cannot execute commit list operation: %w", err)
 	}

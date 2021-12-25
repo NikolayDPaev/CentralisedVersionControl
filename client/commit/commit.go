@@ -8,6 +8,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileIO"
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/netIO"
 )
 
@@ -75,8 +76,25 @@ func ReadCommit(reader io.Reader) (*Commit, error) {
 	return commit, nil
 }
 
+func (c *Commit) GetMissingFiles() (map[string]string, error) {
+	missingFileMap := make(map[string]string, len(c.fileMap)/2)
+
+	for blobId, path := range c.fileMap {
+		exists, err := fileIO.FileWithHashExists(path, blobId)
+		if err != nil {
+			return nil, err
+		}
+
+		if !exists {
+			missingFileMap[blobId] = path
+		}
+	}
+
+	return missingFileMap, nil
+}
+
 func (c *Commit) Md5Hash() string {
 	hash := md5.Sum([]byte(fmt.Sprintf("%v", c)))
 
-	return string(hash[:len(hash)])
+	return string(hash[:])
 }
