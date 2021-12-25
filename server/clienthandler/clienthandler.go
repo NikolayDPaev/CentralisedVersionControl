@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	GET_COMMIT_LIST_CODE = 0
-	DOWNLOAD_COMMIT      = 1
-	UPLOAD_COMMIT        = 2
-	EMPTY_REQUEST        = 4
+	GET_COMMIT_LIST = 0
+	DOWNLOAD_COMMIT = 1
+	UPLOAD_COMMIT   = 2
+	EMPTY_REQUEST   = 3
 )
 
 func Communication(reader io.Reader, writer io.Writer) error {
@@ -21,7 +21,7 @@ func Communication(reader io.Reader, writer io.Writer) error {
 	}
 
 	switch opCode {
-	case GET_COMMIT_LIST_CODE:
+	case GET_COMMIT_LIST:
 		err = sendCommitList(writer)
 	case UPLOAD_COMMIT:
 		err = receiveCommit(reader, writer)

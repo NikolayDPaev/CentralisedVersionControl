@@ -53,7 +53,7 @@ func (c *Commit) ExtractBlobIds() []string { // regex ????
 
 	blobIds := make([]string, len(lines))
 	for i, line := range lines {
-		blobIds[i] = strings.Split(line, " ")[1]
+		blobIds[i] = strings.Split(line, " ")[0]
 	}
 
 	return blobIds
