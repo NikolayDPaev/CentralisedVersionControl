@@ -11,6 +11,7 @@ const (
 	GET_COMMIT_LIST_CODE = 0
 	DOWNLOAD_COMMIT      = 1
 	UPLOAD_COMMIT        = 2
+	EMPTY_REQUEST        = 4
 )
 
 func Communication(reader io.Reader, writer io.Writer) error {
@@ -26,6 +27,8 @@ func Communication(reader io.Reader, writer io.Writer) error {
 		err = receiveCommit(reader, writer)
 	case DOWNLOAD_COMMIT:
 		err = sendCommit(reader, writer)
+	case EMPTY_REQUEST:
+		return nil
 	}
 
 	return err
