@@ -1,7 +1,6 @@
 package fileIO
 
 import (
-	"errors"
 	"fmt"
 	"os"
 )
@@ -26,16 +25,12 @@ func NewBlob(blobId string) (*os.File, error) {
 	return file, nil
 }
 
-func CheckIfExist(blobId string) (bool, error) {
-	if _, err := os.Stat(blobPath(blobId)); err == nil {
-		return true, nil
-
-	} else if errors.Is(err, os.ErrNotExist) {
-		return false, nil
-
-	} else {
+func BlobExists(blobId string) (bool, error) {
+	b, err := fileExists(blobPath(blobId))
+	if err != nil {
 		return false, err
 	}
+	return b, nil
 }
 
 func BlobSize(blobId string) (int64, error) {

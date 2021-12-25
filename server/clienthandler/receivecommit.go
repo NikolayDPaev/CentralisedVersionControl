@@ -14,7 +14,7 @@ func getMissingBlobIds(commit commit.Commit) ([]string, error) {
 	missingBlobIds := make([]string, len(commitBlobIds)/2)
 
 	for _, blobId := range commitBlobIds {
-		exists, err := fileIO.CheckIfExist(blobId)
+		exists, err := fileIO.BlobExists(blobId)
 		if err != nil {
 			return nil, fmt.Errorf("cannot check existence of blob %s: %w", blobId, err)
 		}

@@ -8,6 +8,11 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
 
+const (
+	OK    = 0
+	ERROR = 1
+)
+
 func sendCommitData(commitId string, writer io.Writer) error {
 	commitFile, err := fileIO.OpenCommit(commitId)
 	if err != nil {
@@ -47,10 +52,31 @@ func sendBlob(blobId string, writer io.Writer) error {
 	return nil
 }
 
+func validateCommitId(commitId string, writer io.Writer) (bool, error) {
+	exists, err := fileIO.CommitExists(commitId)
+	if err != nil {
+		return false, err
+	}
+	if exists {
+		netIO.SendVarInt(OK, writer)
+		return true, nil
+	}
+	netIO.SendVarInt(ERROR, writer)
+	return false, nil
+}
+
 func sendCommit(reader io.Reader, writer io.Writer) error {
 	commitId, err := netIO.ReceiveString(reader)
 	if err != nil {
-		return fmt.Errorf("error reading commit id: %s", err)
+		return fmt.Errorf("error reading commit id: %w", err)
+	}
+
+	validId, err := validateCommitId(commitId, writer)
+	if err != nil {
+		return fmt.Errorf("error validating commit id: %w", err)
+	}
+	if !validId {
+		return nil
 	}
 
 	err = sendCommitData(commitId, writer)

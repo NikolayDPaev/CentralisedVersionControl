@@ -1,6 +1,7 @@
 package fileIO
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"log"
@@ -9,6 +10,18 @@ import (
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/commit"
 )
+
+func fileExists(filePath string) (bool, error) {
+	if _, err := os.Stat(filePath); err == nil {
+		return true, nil
+
+	} else if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+
+	} else {
+		return false, err
+	}
+}
 
 func extractMetadata(fileInfo fs.FileInfo) (*commit.Metadata, error) {
 	file, err := os.Open("commits/" + fileInfo.Name())
@@ -75,4 +88,12 @@ func CommitSize(commitId string) (int64, error) {
 	}
 
 	return fileInfo.Size(), nil
+}
+
+func CommitExists(commitId string) (bool, error) {
+	b, err := fileExists("commits/" + commitId)
+	if err != nil {
+		return false, err
+	}
+	return b, nil
 }
