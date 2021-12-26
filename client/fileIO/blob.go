@@ -27,10 +27,10 @@ func CompressToTempFile(source string) (*os.File, error) {
 	bytes := make([]byte, CHUNK_SIZE)
 
 	n, errR := sFile.Read(bytes)
-	_, errW := gzipWriter.Write(bytes)
+	_, errW := gzipWriter.Write(bytes[:n])
 	for n > 0 && errR == nil && errW == nil {
 		n, errR = sFile.Read(bytes)
-		_, errW = gzipWriter.Write(bytes)
+		_, errW = gzipWriter.Write(bytes[:n])
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error compressing chunks of file: %w", err)
@@ -56,10 +56,10 @@ func DecompressFile(dest string, sFile *os.File) error {
 	bytes := make([]byte, CHUNK_SIZE)
 
 	n, errR := gzipReader.Read(bytes)
-	_, errW := dFile.Write(bytes)
+	_, errW := dFile.Write(bytes[:n])
 	for n > 0 && errR == nil && errW == nil {
 		n, errR = gzipReader.Read(bytes)
-		_, errW = dFile.Write(bytes)
+		_, errW = dFile.Write(bytes[:n])
 	}
 
 	if err != nil {
