@@ -39,6 +39,10 @@ func sendBlob(blobId string, writer io.Writer) error {
 	}
 	defer file.Close()
 
+	if err := netIO.SendString(blobId, writer); err != nil {
+		return fmt.Errorf("error sending blobId %s: %w", blobId, err)
+	}
+
 	size, err := fileIO.BlobSize(blobId)
 	if err != nil {
 		return fmt.Errorf("error getting blob %s size: %w", blobId, err)
