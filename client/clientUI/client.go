@@ -2,14 +2,61 @@ package clientUI
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"log"
 	"net"
 	"os"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/commands"
 )
 
-func Init() error {
+var errInvalidCommand = errors.New("invalid command")
+
+func ReadArgs(args []string) {
+	if len(args) < 1 {
+		fmt.Println("Usage: csv <command>")
+		return
+	}
+
+	var err error
+	switch args[0] {
+	case "init":
+		err = initClient()
+	case "list":
+		err = commitList()
+	case "push":
+		err = uploadCommit()
+	case "pull":
+		err = downloadCommit(args)
+	case "help":
+		help()
+	default:
+		err = errInvalidCommand
+	}
+
+	if err != nil {
+		if errors.Is(err, commands.ErrMissingMetafile) {
+			fmt.Println("Cannot find .cvc file! Please run command csv init.")
+		} else if errors.Is(err, errInvalidCommand) {
+			fmt.Println("Incorrect command. For list of commands run \"csv help\".")
+		} else {
+			log.Println(err)
+		}
+	}
+}
+
+func help() {
+	fmt.Println("Usage: csv <command>")
+	fmt.Println("Commands:")
+	fmt.Println("init - initialization of workplace in the current directory")
+	fmt.Println("list - listing of the available commits")
+	fmt.Println("pull <commitId> - downloading commit to the workplace")
+	fmt.Println("push - commiting the current state of the workplace ")
+	fmt.Println("help - prints this text")
+}
+
+func initClient() error {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Enter username:")
 	scanner.Scan()
@@ -30,7 +77,7 @@ func Init() error {
 	return nil
 }
 
-func CommitList() error {
+func commitList() error {
 	metafile, err := commands.ReadMetafileData()
 	if err != nil {
 		return err
@@ -55,7 +102,10 @@ func CommitList() error {
 	return nil
 }
 
-func DownloadCommit(commitId string) error {
+func downloadCommit(args []string) error {
+	if len(args) != 2 {
+		return errInvalidCommand
+	}
 	metafile, err := commands.ReadMetafileData()
 	if err != nil {
 		return err
@@ -67,7 +117,7 @@ func DownloadCommit(commitId string) error {
 	}
 	defer c.Close()
 
-	message, err := commands.DownloadCommit(commitId, c, c)
+	message, err := commands.DownloadCommit(args[1], c, c)
 	if err != nil {
 		return fmt.Errorf("cannot execute download commit operation: %w", err)
 	}
@@ -75,7 +125,7 @@ func DownloadCommit(commitId string) error {
 	return nil
 }
 
-func UploadCommit() error {
+func uploadCommit() error {
 	metafile, err := commands.ReadMetafileData()
 	if err != nil {
 		return err

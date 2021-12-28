@@ -2,7 +2,7 @@ package commands
 
 import (
 	"bufio"
-	"fmt"
+	"errors"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileIO"
 )
@@ -12,11 +12,12 @@ type MetafileData struct {
 	Address  string
 }
 
+var ErrMissingMetafile = errors.New("cannot open .cvc file")
+
 func ReadMetafileData() (*MetafileData, error) {
 	file, err := fileIO.OpenMetaFile()
 	if err != nil {
-		fmt.Println("Cannot fing .cvc file. Please run command csv init")
-		return nil, err
+		return nil, ErrMissingMetafile
 	}
 	defer file.Close()
 
