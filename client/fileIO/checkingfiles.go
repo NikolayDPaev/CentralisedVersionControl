@@ -2,6 +2,7 @@ package fileIO
 
 import (
 	"crypto/md5"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -34,8 +35,8 @@ func GetHashOfFile(filepath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error getting hash of %s: %w", filepath, err)
 	}
-
-	return string(hash.Sum(nil)), nil
+	str := base64.StdEncoding.EncodeToString(hash.Sum(nil))
+	return str, nil
 }
 
 func FileWithHashExists(filepath string, hash string) (bool, error) {
