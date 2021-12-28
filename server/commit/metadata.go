@@ -1,9 +1,10 @@
 package commit
 
 import (
-	"bufio"
 	"fmt"
 	"io"
+
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
 
 type Metadata struct {
@@ -13,16 +14,15 @@ type Metadata struct {
 }
 
 func ReadMetadata(reader io.Reader, id string) (*Metadata, error) {
-	scanner := bufio.NewScanner(reader)
-	scanner.Scan()
-	message := scanner.Text()
-	scanner.Scan()
-	creator := scanner.Text()
-
-	if err := scanner.Err(); err != nil {
+	message, err := netIO.ReceiveString(reader)
+	if err != nil {
 		return nil, err
 	}
 
+	creator, err := netIO.ReceiveString(reader)
+	if err != nil {
+		return nil, err
+	}
 	return &Metadata{message: message, creator: creator, id: id}, nil
 }
 
@@ -31,16 +31,14 @@ func (m Metadata) String() string {
 }
 
 func (m *Metadata) Write(writer io.Writer) error {
-	bufWriter := bufio.NewWriter(writer)
-
-	_, err := bufWriter.WriteString(m.message + "\n")
+	err := netIO.SendString(m.message, writer)
 	if err != nil {
-		return fmt.Errorf("cannot write metadata: %w", err)
+		return fmt.Errorf("cannot send commit message: %w", err)
 	}
 
-	_, err = bufWriter.WriteString(m.creator + "\n")
+	err = netIO.SendString(m.creator, writer)
 	if err != nil {
-		return fmt.Errorf("cannot write metadata: %w", err)
+		return fmt.Errorf("cannot send commit creator: %w", err)
 	}
 	return nil
 }
