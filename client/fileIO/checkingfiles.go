@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -20,7 +21,7 @@ func fileExists(filePath string) (bool, error) {
 	}
 }
 
-func getHashOfFile(filepath string) (string, error) {
+func GetHashOfFile(filepath string) (string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return "", fmt.Errorf("error opening %s: %w", filepath, err)
@@ -46,10 +47,46 @@ func FileWithHashExists(filepath string, hash string) (bool, error) {
 		return false, nil
 	}
 
-	realHash, err := getHashOfFile(filepath)
+	realHash, err := GetHashOfFile(filepath)
 	if err != nil {
 		return false, err
 	}
 
 	return hash == realHash, nil
+}
+
+func FileSize(path string) (int64, error) {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return 0, fmt.Errorf("cannot get file %s file info: %w", path, err)
+	}
+
+	return fileInfo.Size(), nil
+}
+
+func GetPathsOfAllFiles() ([]string, error) {
+	var paths []string
+	var stack []string
+
+	stack = append(stack, ".") // windows?
+	for len(stack) > 0 {
+		n := len(stack) - 1
+		curDir := stack[n] // top
+		stack = stack[:n]  // pop
+
+		files, err := ioutil.ReadDir(curDir)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning directory %s: %w", curDir, err)
+		}
+
+		for _, file := range files {
+			if file.IsDir() {
+				stack = append(stack, curDir+"/"+file.Name())
+			} else {
+				paths = append(paths, curDir+"/"+file.Name())
+			}
+		}
+	}
+
+	return paths, nil
 }

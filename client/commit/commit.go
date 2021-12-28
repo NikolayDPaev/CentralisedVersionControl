@@ -18,64 +18,44 @@ type Commit struct {
 	fileMap map[string]string
 }
 
-func getMap(tree string) (map[string]string, error) {
-	lines := strings.Split(tree, "\n")
-
-	fileMap := make(map[string]string, len(lines))
-
-	for _, line := range lines {
-		elements := strings.Split(line, " ")
-		if len(elements) != 2 {
-			return nil, errors.New("corrupt commit tree string")
-		}
-		fileMap[elements[0]] = elements[1]
+func (c *Commit) GetBlobPath(blobId string) (string, error) {
+	path, ok := c.fileMap[blobId]
+	if !ok {
+		return "", errors.New("missing blobId in filemap")
 	}
-
-	return fileMap, nil
+	return path, nil
 }
 
-func readMetadata(reader io.Reader) (string, string, error) {
-	scanner := bufio.NewScanner(reader)
-	scanner.Scan()
-	message := scanner.Text()
-	scanner.Scan()
-	creator := scanner.Text()
-
-	if err := scanner.Err(); err != nil {
-		return "", "", err
+func getTree(fileMap map[string]string) string {
+	var sb strings.Builder
+	for id, path := range fileMap {
+		sb.WriteString(id + " " + path + "\n")
 	}
-
-	return message, creator, nil
+	str := sb.String()
+	if sb.Len() > 1 {
+		return str[:len(str)-1] // removing trailing endline
+	}
+	return str
 }
 
-func ReadCommit(reader io.Reader) (*Commit, error) {
-	id, err := netIO.ReceiveString(reader)
+func (c *Commit) Send(writer io.Writer) error {
+	bufWriter := bufio.NewWriter(writer)
+	_, err := bufWriter.WriteString(c.message + "\n")
 	if err != nil {
-		return nil, fmt.Errorf("cannot read id of commit: %w", err)
+		return fmt.Errorf("error sending commit message: %w", err)
+	}
+	_, err = bufWriter.WriteString(c.creator + "\n")
+	if err != nil {
+		return fmt.Errorf("error sending commit creator: %w", err)
 	}
 
-	message, creator, err := readMetadata(reader)
+	err = netIO.SendString(getTree(c.fileMap), writer)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read metadata of commit: %w", err)
+		return fmt.Errorf("error sending commit tree: %w", err)
 	}
 
-	strTree, err := netIO.ReceiveString(reader)
-	if err != nil {
-		return nil, fmt.Errorf("cannot read tree string of commit: %w", err)
-	}
-
-	fileMap, err := getMap(strTree)
-	if err != nil {
-		return nil, err
-	}
-
-	commit := &Commit{message, creator, fileMap}
-	if id != commit.Md5Hash() {
-		return nil, errors.New("mismatched hash values")
-	}
-	return commit, nil
+	return nil
 }
-
 func (c *Commit) GetMissingFiles() (map[string]string, error) {
 	missingFileMap := make(map[string]string, len(c.fileMap)/2)
 

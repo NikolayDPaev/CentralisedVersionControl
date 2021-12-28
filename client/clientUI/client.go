@@ -54,3 +54,48 @@ func CommitList() error {
 
 	return nil
 }
+
+func DownloadCommit(commitId string) error {
+	metafile, err := commands.ReadMetafileData()
+	if err != nil {
+		return err
+	}
+
+	c, err := net.Dial("tcp", metafile.Address)
+	if err != nil {
+		return fmt.Errorf("error connecting to server: %w", err)
+	}
+	defer c.Close()
+
+	message, err := commands.DownloadCommit(commitId, c, c)
+	if err != nil {
+		return fmt.Errorf("cannot execute download commit operation: %w", err)
+	}
+	fmt.Println(message)
+	return nil
+}
+
+func UploadCommit() error {
+	metafile, err := commands.ReadMetafileData()
+	if err != nil {
+		return err
+	}
+
+	c, err := net.Dial("tcp", metafile.Address)
+	if err != nil {
+		return fmt.Errorf("error connecting to server: %w", err)
+	}
+	defer c.Close()
+
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Println("Enter commit message:")
+	scanner.Scan()
+	message := scanner.Text()
+
+	err = commands.UploadCommit(message, metafile.Username, c, c)
+	if err != nil {
+		return fmt.Errorf("error uploading commit: %w", err)
+	}
+	fmt.Println("Commit uploaded successfuly!")
+	return nil
+}
