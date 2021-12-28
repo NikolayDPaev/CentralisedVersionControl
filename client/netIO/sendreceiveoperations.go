@@ -32,21 +32,22 @@ func SendVarInt(num int64, writer io.Writer) error {
 }
 
 func ReceiveVarInt(reader io.Reader) (int64, error) {
-	byteReader := io.ByteReader(bufio.NewReader(reader))
-
-	num, err := binary.ReadVarint(byteReader)
-	if err == nil {
+	num, err := ReadVarint(reader)
+	if err != nil {
 		return 0, fmt.Errorf("error reading var int: %w", err)
 	}
 	return num, nil
 }
 
 func SendString(str string, writer io.Writer) error {
-	err := SendVarInt(int64(len(str)), writer)
+	strBuf := []byte(str)
+	err := SendVarInt(int64(len(strBuf)), writer)
 	if err != nil {
 		return fmt.Errorf("could not send length of string: %w", err)
 	}
-	writer.Write([]byte(str))
+	if n, err := writer.Write(strBuf); err != nil || n != len(strBuf) {
+		return fmt.Errorf("error sending string %s: %w", str, err)
+	}
 	return nil
 }
 
