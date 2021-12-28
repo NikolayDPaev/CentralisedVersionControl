@@ -32,48 +32,22 @@ func SendVarInt(num int64, writer io.Writer) error {
 }
 
 func ReceiveVarInt(reader io.Reader) (int64, error) {
-	byteReader := io.ByteReader(bufio.NewReader(reader))
-
-	num, err := binary.ReadVarint(byteReader)
-	if err == nil {
+	num, err := ReadVarint(reader)
+	if err != nil {
 		return 0, fmt.Errorf("error reading var int: %w", err)
 	}
 	return num, nil
 }
 
-// func SendUint32(num uint32, writer io.Writer) error {
-// 	bytes := make([]byte, UINT_32_BYTE_LEN)
-// 	binary.LittleEndian.PutUint32(bytes, num)
-// 	n, err := writer.Write(bytes)
-
-// 	if n != UINT_32_BYTE_LEN {
-// 		return errors.New("could not send number")
-// 	}
-// 	if err != nil {
-// 		return fmt.Errorf("could not send number: %w", err)
-// 	}
-// 	return nil
-// }
-
-// func ReceiveUint32(reader io.Reader) (uint32, error) {
-// 	bytes := make([]byte, UINT_32_BYTE_LEN)
-// 	n, err := reader.Read(bytes)
-
-// 	if n != UINT_32_BYTE_LEN {
-// 		return 0, errors.New("length does not match")
-// 	}
-// 	if err != nil {
-// 		return 0, fmt.Errorf("could not receive number: %w", err)
-// 	}
-// 	return binary.BigEndian.Uint32(bytes), nil
-// }
-
 func SendString(str string, writer io.Writer) error {
-	err := SendVarInt(int64(len(str)), writer)
+	strBuf := []byte(str)
+	err := SendVarInt(int64(len(strBuf)), writer)
 	if err != nil {
 		return fmt.Errorf("could not send length of string: %w", err)
 	}
-	writer.Write([]byte(str))
+	if n, err := writer.Write(strBuf); err != nil || n != len(strBuf) {
+		return fmt.Errorf("error sending string %s: %w", str, err)
+	}
 	return nil
 }
 

@@ -9,9 +9,10 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
 
-func getMissingBlobIds(commit commit.Commit) ([]string, error) {
+func getMissingBlobIds(commit *commit.Commit) ([]string, error) {
 	commitBlobIds := commit.ExtractBlobIds()
-	missingBlobIds := make([]string, len(commitBlobIds)/2)
+	//missingBlobIds := make([]string, len(commitBlobIds)/2)
+	var missingBlobIds []string
 
 	for _, blobId := range commitBlobIds {
 		exists, err := fileIO.BlobExists(blobId)
@@ -64,7 +65,7 @@ func receiveCommit(reader io.Reader, writer io.Writer) error {
 		return fmt.Errorf("error receiving commit: %w", err)
 	}
 
-	missingBlobIds, err := getMissingBlobIds(*commit)
+	missingBlobIds, err := getMissingBlobIds(commit)
 	if err != nil {
 		return fmt.Errorf("error getting missing blobIds from commit %s: %w", commit.String(), err)
 	}

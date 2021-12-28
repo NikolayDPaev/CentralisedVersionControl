@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -54,18 +53,18 @@ func handleClient(c net.Conn, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-func logUnwrappedError(err error) {
-	currentErr := err
-	for errors.Unwrap(currentErr) != nil {
-		currentErr = errors.Unwrap(currentErr)
-		log.Println(err)
-	}
-}
+// func logUnwrappedError(err error) {
+// 	currentErr := err
+// 	for errors.Unwrap(currentErr) != nil {
+// 		currentErr = errors.Unwrap(currentErr)
+// 		log.Println(err)
+// 	}
+// }
 
 func (s *Server) runServer() {
 	l, err := net.Listen("tcp4", ":"+s.port)
 	if err != nil {
-		logUnwrappedError(err)
+		log.Println(err)
 		return
 	}
 	defer l.Close()
