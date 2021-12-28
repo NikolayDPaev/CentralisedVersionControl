@@ -1,7 +1,6 @@
 package commit
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -12,13 +11,13 @@ import (
 )
 
 func readMetadata(reader io.Reader) (string, string, error) {
-	scanner := bufio.NewScanner(reader)
-	scanner.Scan()
-	message := scanner.Text()
-	scanner.Scan()
-	creator := scanner.Text()
+	message, err := netIO.ReceiveString(reader)
+	if err != nil {
+		return "", "", err
+	}
 
-	if err := scanner.Err(); err != nil {
+	creator, err := netIO.ReceiveString(reader)
+	if err != nil {
 		return "", "", err
 	}
 
