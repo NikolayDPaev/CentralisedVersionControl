@@ -9,6 +9,14 @@ import (
 	"os"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/commands"
+	"github.com/NikolayDPaev/CentralisedVersionControl/client/netIO"
+)
+
+const (
+	GET_COMMIT_LIST = 0
+	DOWNLOAD_COMMIT = 1
+	UPLOAD_COMMIT   = 2
+	EMPTY_REQUEST   = 3
 )
 
 var errInvalidCommand = errors.New("invalid command")
@@ -89,6 +97,10 @@ func commitList() error {
 	}
 	defer c.Close()
 
+	if err := netIO.SendVarInt(GET_COMMIT_LIST, c); err != nil {
+		return fmt.Errorf("cannot send opcode: %w", err)
+	}
+
 	commitList, err := commands.GetCommitList(c, c)
 	if err != nil {
 		return fmt.Errorf("cannot execute commit list operation: %w", err)
@@ -117,6 +129,10 @@ func downloadCommit(args []string) error {
 	}
 	defer c.Close()
 
+	if err := netIO.SendVarInt(DOWNLOAD_COMMIT, c); err != nil {
+		return fmt.Errorf("cannot send opcode: %w", err)
+	}
+
 	message, err := commands.DownloadCommit(args[1], c, c)
 	if err != nil {
 		return fmt.Errorf("cannot execute download commit operation: %w", err)
@@ -136,6 +152,10 @@ func uploadCommit() error {
 		return fmt.Errorf("error connecting to server: %w", err)
 	}
 	defer c.Close()
+
+	if err := netIO.SendVarInt(UPLOAD_COMMIT, c); err != nil {
+		return fmt.Errorf("cannot send opcode: %w", err)
+	}
 
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Enter commit message:")
