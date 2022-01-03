@@ -17,7 +17,7 @@ const (
 func Communication(reader io.Reader, writer io.Writer) error {
 	opCode, err := netIO.ReceiveVarInt(reader)
 	if err != nil {
-		return fmt.Errorf("could not receive opcode: %w", err)
+		return fmt.Errorf("could not receive opcode:\n%w", err)
 	}
 
 	switch opCode {

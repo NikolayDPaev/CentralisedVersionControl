@@ -68,7 +68,7 @@ func CommitList() []*commit.Metadata {
 func OpenCommit(commitId string) (*os.File, error) {
 	file, err := os.Open("commits/" + commitId)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open commit %s: %w", commitId, err)
+		return nil, fmt.Errorf("cannot open commit %s:\n%w", commitId, err)
 	}
 	return file, nil
 }
@@ -76,7 +76,7 @@ func OpenCommit(commitId string) (*os.File, error) {
 func NewCommit(commitId string) (*os.File, error) {
 	file, err := os.Create("commits/" + commitId)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create commit file %s: %w", commitId, err)
+		return nil, fmt.Errorf("cannot create commit file %s:\n%w", commitId, err)
 	}
 	return file, nil
 }
@@ -84,7 +84,7 @@ func NewCommit(commitId string) (*os.File, error) {
 func CommitSize(commitId string) (int64, error) {
 	fileInfo, err := os.Stat("commits/" + commitId)
 	if err != nil {
-		return 0, fmt.Errorf("cannot get commit %s file info: %w", commitId, err)
+		return 0, fmt.Errorf("cannot get commit %s file info:\n%w", commitId, err)
 	}
 
 	return fileInfo.Size(), nil

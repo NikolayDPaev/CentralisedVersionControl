@@ -26,7 +26,7 @@ func SendVarInt(num int64, writer io.Writer) error {
 	bytes := binary.PutVarint(buf, num)
 
 	if n, err := writer.Write(buf[:bytes]); err != nil || n != bytes {
-		return fmt.Errorf("error sending var int %d: %w", num, err)
+		return fmt.Errorf("error sending var int %d:\n%w", num, err)
 	}
 	return nil
 }
@@ -34,7 +34,7 @@ func SendVarInt(num int64, writer io.Writer) error {
 func ReceiveVarInt(reader io.Reader) (int64, error) {
 	num, err := ReadVarint(reader)
 	if err != nil {
-		return 0, fmt.Errorf("error reading var int: %w", err)
+		return 0, fmt.Errorf("error reading var int:\n%w", err)
 	}
 	return num, nil
 }
@@ -43,10 +43,10 @@ func SendString(str string, writer io.Writer) error {
 	strBuf := []byte(str)
 	err := SendVarInt(int64(len(strBuf)), writer)
 	if err != nil {
-		return fmt.Errorf("could not send length of string: %w", err)
+		return fmt.Errorf("could not send length of string:\n%w", err)
 	}
 	if n, err := writer.Write(strBuf); err != nil || n != len(strBuf) {
-		return fmt.Errorf("error sending string %s: %w", str, err)
+		return fmt.Errorf("error sending string %s:\n%w", str, err)
 	}
 	return nil
 }
@@ -54,7 +54,7 @@ func SendString(str string, writer io.Writer) error {
 func ReceiveString(reader io.Reader) (string, error) {
 	len, err := ReceiveVarInt(reader)
 	if err != nil {
-		return "", fmt.Errorf("could not receive length of string: %w", err)
+		return "", fmt.Errorf("could not receive length of string:\n%w", err)
 	}
 
 	bytes := make([]byte, len)
@@ -64,7 +64,7 @@ func ReceiveString(reader io.Reader) (string, error) {
 		return "", errors.New("length does not match")
 	}
 	if err != nil {
-		return "", fmt.Errorf("could not receive string: %w", err)
+		return "", fmt.Errorf("could not receive string:\n%w", err)
 	}
 
 	return string(bytes), nil
@@ -72,12 +72,12 @@ func ReceiveString(reader io.Reader) (string, error) {
 
 func SendStringSlice(slice []string, writer io.Writer) error {
 	if err := SendVarInt(int64(len(slice)), writer); err != nil {
-		return fmt.Errorf("error sending string slice size: %w", err)
+		return fmt.Errorf("error sending string slice size:\n%w", err)
 	}
 
 	for _, str := range slice {
 		if err := SendString(str, writer); err != nil {
-			return fmt.Errorf("error sending string slice: %w", err)
+			return fmt.Errorf("error sending string slice:\n%w", err)
 		}
 	}
 	return nil
@@ -86,14 +86,14 @@ func SendStringSlice(slice []string, writer io.Writer) error {
 func ReceiveStringSlice(reader io.Reader) ([]string, error) {
 	len, err := ReceiveVarInt(reader)
 	if err != nil {
-		return nil, fmt.Errorf("error receiving string slice size: %w", err)
+		return nil, fmt.Errorf("error receiving string slice size:\n%w", err)
 	}
 
 	slice := make([]string, len)
 	for i := 0; i < int(len); i++ {
 		slice[i], err = ReceiveString(reader)
 		if err != nil {
-			return nil, fmt.Errorf("error receiving string slice: %w", err)
+			return nil, fmt.Errorf("error receiving string slice:\n%w", err)
 		}
 	}
 	return slice, nil
@@ -116,10 +116,10 @@ func SendFileData(fileReader io.Reader, fileLength int64, netWriter io.Writer) e
 		_, sendErr = bufNetWriter.Write(buf[:bytesRead])
 	}
 	if readErr != nil {
-		return fmt.Errorf("error reading file: %w", readErr)
+		return fmt.Errorf("error reading file:\n%w", readErr)
 	}
 	if sendErr != nil {
-		return fmt.Errorf("error sending file: %w", sendErr)
+		return fmt.Errorf("error sending file:\n%w", sendErr)
 	}
 
 	return nil
@@ -128,7 +128,7 @@ func SendFileData(fileReader io.Reader, fileLength int64, netWriter io.Writer) e
 func ReceiveFileData(netReader io.Reader, fileWriter io.Writer) error {
 	remaining, err := ReceiveVarInt(netReader)
 	if err != nil {
-		return fmt.Errorf("error receiving file length: %w", err)
+		return fmt.Errorf("error receiving file length:\n%w", err)
 	}
 	bufNetReader := bufio.NewReader(netReader)
 	bufFileWriter := bufio.NewWriter(fileWriter)
@@ -144,10 +144,10 @@ func ReceiveFileData(netReader io.Reader, fileWriter io.Writer) error {
 		_, sendErr = bufFileWriter.Write(buf[:bytesRead])
 	}
 	if readErr != nil {
-		return fmt.Errorf("error receiving file: %w", readErr)
+		return fmt.Errorf("error receiving file:\n%w", readErr)
 	}
 	if sendErr != nil {
-		return fmt.Errorf("error writing file: %w", sendErr)
+		return fmt.Errorf("error writing file:\n%w", sendErr)
 	}
 
 	return nil

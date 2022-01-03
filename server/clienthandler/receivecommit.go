@@ -17,7 +17,7 @@ func getMissingBlobIds(commit *commit.Commit) ([]string, error) {
 	for _, blobId := range commitBlobIds {
 		exists, err := fileIO.BlobExists(blobId)
 		if err != nil {
-			return nil, fmt.Errorf("cannot check existence of blob %s: %w", blobId, err)
+			return nil, fmt.Errorf("cannot check existence of blob %s:\n%w", blobId, err)
 		}
 
 		if !exists {
@@ -30,17 +30,17 @@ func getMissingBlobIds(commit *commit.Commit) ([]string, error) {
 func receiveBlob(reader io.Reader) error {
 	blobId, err := netIO.ReceiveString(reader)
 	if err != nil {
-		return fmt.Errorf("error receiving blobId: %w", err)
+		return fmt.Errorf("error receiving blobId:\n%w", err)
 	}
 	file, err := fileIO.NewBlob(blobId)
 	if err != nil {
-		return fmt.Errorf("error creating blob: %w", err)
+		return fmt.Errorf("error creating blob:\n%w", err)
 	}
 	defer file.Close()
 
 	err = netIO.ReceiveFileData(reader, file)
 	if err != nil {
-		return fmt.Errorf("error receiving blob: %w", err)
+		return fmt.Errorf("error receiving blob:\n%w", err)
 	}
 
 	return nil

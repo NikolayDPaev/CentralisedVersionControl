@@ -16,17 +16,17 @@ type Commit struct {
 func ReadCommit(reader io.Reader) (*Commit, error) {
 	id, err := netIO.ReceiveString(reader)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read id of commit: %w", err)
+		return nil, fmt.Errorf("cannot read id of commit:\n%w", err)
 	}
 
 	metadata, err := ReadMetadata(reader, id)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read metadata of commit: %w", err)
+		return nil, fmt.Errorf("cannot read metadata of commit:\n%w", err)
 	}
 
 	tree, err := netIO.ReceiveString(reader)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read tree string of commit: %w", err)
+		return nil, fmt.Errorf("cannot read tree string of commit:\n%w", err)
 	}
 
 	return &Commit{metadata: *metadata, tree: tree}, nil
@@ -38,11 +38,11 @@ func (c *Commit) Id() string {
 
 func (c *Commit) Write(writer io.Writer) error {
 	if err := c.metadata.Write(writer); err != nil {
-		return fmt.Errorf("cannot write commit metadata: %w", err)
+		return fmt.Errorf("cannot write commit metadata:\n%w", err)
 	}
 
 	if err := netIO.SendString(c.tree, writer); err != nil {
-		return fmt.Errorf("cannot write commit tree: %w", err)
+		return fmt.Errorf("cannot write commit tree:\n%w", err)
 	}
 
 	return nil

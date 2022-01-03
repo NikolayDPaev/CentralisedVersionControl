@@ -12,13 +12,13 @@ func sendCommitList(writer io.Writer) error {
 	metadataList := fileIO.CommitList()
 	err := netIO.SendVarInt(int64(len(metadataList)), writer)
 	if err != nil {
-		return fmt.Errorf("could not send metadata list length: %w", err)
+		return fmt.Errorf("could not send metadata list length:\n%w", err)
 	}
 
 	for _, entry := range metadataList {
 		err := netIO.SendString(entry.String(), writer)
 		if err != nil {
-			return fmt.Errorf("could not send metadata entry: %w", err)
+			return fmt.Errorf("could not send metadata entry:\n%w", err)
 		}
 	}
 	return nil

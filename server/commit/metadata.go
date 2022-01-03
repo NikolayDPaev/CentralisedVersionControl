@@ -33,12 +33,12 @@ func (m Metadata) String() string {
 func (m *Metadata) Write(writer io.Writer) error {
 	err := netIO.SendString(m.message, writer)
 	if err != nil {
-		return fmt.Errorf("cannot send commit message: %w", err)
+		return fmt.Errorf("cannot send commit message:\n%w", err)
 	}
 
 	err = netIO.SendString(m.creator, writer)
 	if err != nil {
-		return fmt.Errorf("cannot send commit creator: %w", err)
+		return fmt.Errorf("cannot send commit creator:\n%w", err)
 	}
 	return nil
 }

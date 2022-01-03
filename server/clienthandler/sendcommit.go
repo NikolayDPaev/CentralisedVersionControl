@@ -35,22 +35,22 @@ func sendCommitData(commitId string, writer io.Writer) error {
 func sendBlob(blobId string, writer io.Writer) error {
 	file, err := fileIO.OpenBlob(blobId)
 	if err != nil {
-		return fmt.Errorf("error opening blob %s: %w", blobId, err)
+		return fmt.Errorf("error opening blob %s:\n%w", blobId, err)
 	}
 	defer file.Close()
 
 	if err := netIO.SendString(blobId, writer); err != nil {
-		return fmt.Errorf("error sending blobId %s: %w", blobId, err)
+		return fmt.Errorf("error sending blobId %s:\n%w", blobId, err)
 	}
 
 	size, err := fileIO.BlobSize(blobId)
 	if err != nil {
-		return fmt.Errorf("error getting blob %s size: %w", blobId, err)
+		return fmt.Errorf("error getting blob %s size:\n%w", blobId, err)
 	}
 
 	err = netIO.SendFileData(file, size, writer)
 	if err != nil {
-		return fmt.Errorf("error sending blob %s: %w", blobId, err)
+		return fmt.Errorf("error sending blob %s:\n%w", blobId, err)
 	}
 
 	return nil
@@ -72,12 +72,12 @@ func validateCommitId(commitId string, writer io.Writer) (bool, error) {
 func sendCommit(reader io.Reader, writer io.Writer) error {
 	commitId, err := netIO.ReceiveString(reader)
 	if err != nil {
-		return fmt.Errorf("error reading commit id: %w", err)
+		return fmt.Errorf("error reading commit id:\n%w", err)
 	}
 
 	validId, err := validateCommitId(commitId, writer)
 	if err != nil {
-		return fmt.Errorf("error validating commit id: %w", err)
+		return fmt.Errorf("error validating commit id:\n%w", err)
 	}
 	if !validId {
 		return nil
@@ -90,7 +90,7 @@ func sendCommit(reader io.Reader, writer io.Writer) error {
 
 	blobIdsForSend, err := netIO.ReceiveStringSlice(reader)
 	if err != nil {
-		return fmt.Errorf("error getting blob ids for send: %w", err)
+		return fmt.Errorf("error getting blob ids for send:\n%w", err)
 	}
 
 	for _, blobId := range blobIdsForSend { // send the requested number of blobs
