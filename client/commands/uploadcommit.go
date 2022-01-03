@@ -12,12 +12,12 @@ import (
 func sendCommit(commit *commit.Commit, writer io.Writer) error {
 	err := netIO.SendString(commit.Md5Hash(), writer)
 	if err != nil {
-		return fmt.Errorf("error sending commit id: %w", err)
+		return fmt.Errorf("error sending commit id:\n%w", err)
 	}
 
 	err = commit.Send(writer)
 	if err != nil {
-		return fmt.Errorf("error sending commit: %w", err)
+		return fmt.Errorf("error sending commit:\n%w", err)
 	}
 	return nil
 }
@@ -25,25 +25,25 @@ func sendCommit(commit *commit.Commit, writer io.Writer) error {
 func sendCompressedBlob(filePath string, writer io.Writer) error {
 	tmpFile, err := fileIO.CompressToTempFile(filePath)
 	if err != nil {
-		return fmt.Errorf("error compressing file %s: %w", filePath, err)
+		return fmt.Errorf("error compressing file %s:\n%w", filePath, err)
 	}
 	defer tmpFile.Close()
 
 	stat, err := tmpFile.Stat()
 	if err != nil {
-		return fmt.Errorf("error getting blobTmp size: %w", err)
+		return fmt.Errorf("error getting blobTmp size:\n%w", err)
 	}
 
 	err = netIO.SendFileData(tmpFile, stat.Size(), writer)
 	if err != nil {
-		return fmt.Errorf("error sending blob: %w", err)
+		return fmt.Errorf("error sending blob:\n%w", err)
 	}
 	return nil
 }
 
 func sendBlob(blobId string, commit *commit.Commit, writer io.Writer) error {
 	if err := netIO.SendString(blobId, writer); err != nil {
-		return fmt.Errorf("error sending blobId %s: %w", blobId, err)
+		return fmt.Errorf("error sending blobId %s:\n%w", blobId, err)
 	}
 
 	path, err := commit.GetBlobPath(blobId)
@@ -52,7 +52,7 @@ func sendBlob(blobId string, commit *commit.Commit, writer io.Writer) error {
 	}
 
 	if err := sendCompressedBlob(path, writer); err != nil {
-		return fmt.Errorf("error sending file %s: %w", path, err)
+		return fmt.Errorf("error sending file %s:\n%w", path, err)
 	}
 	return nil
 }
@@ -60,25 +60,27 @@ func sendBlob(blobId string, commit *commit.Commit, writer io.Writer) error {
 func UploadCommit(message, username string, reader io.Reader, writer io.Writer) error {
 	commit, err := commit.CreateCommit(message, username)
 	if err != nil {
-		return fmt.Errorf("error creating commit: %w", err)
+		return fmt.Errorf("error creating commit:\n%w", err)
 	}
 
+	fmt.Printf("Sending commit %s\n", commit.Md5Hash())
 	err = sendCommit(commit, writer)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("Receiving missing blob IDs from server")
 	missingBlobIds, err := netIO.ReceiveStringSlice(reader)
 	if err != nil {
-		return fmt.Errorf("error receiving missing blobIds: %w", err)
+		return fmt.Errorf("error receiving missing blobIds:\n%w", err)
 	}
 
+	fmt.Printf("Sending %d objects\n", len(missingBlobIds))
 	for _, blobId := range missingBlobIds {
 		err := sendBlob(blobId, commit, writer)
 		if err != nil {
-			return fmt.Errorf("error sending blob with id %s: %w", blobId, err)
+			return fmt.Errorf("error sending blob with id %s:\n%w", blobId, err)
 		}
 	}
-
 	return nil
 }

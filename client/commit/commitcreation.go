@@ -43,17 +43,17 @@ func getMap(tree string) (map[string]string, error) {
 func ReadCommit(reader io.Reader) (*Commit, error) {
 	id, err := netIO.ReceiveString(reader)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read id of commit: %w", err)
+		return nil, fmt.Errorf("cannot read id of commit:\n%w", err)
 	}
 
 	message, creator, err := readMetadata(reader)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read metadata of commit: %w", err)
+		return nil, fmt.Errorf("cannot read metadata of commit:\n%w", err)
 	}
 
 	strTree, err := netIO.ReceiveString(reader)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read tree string of commit: %w", err)
+		return nil, fmt.Errorf("cannot read tree string of commit:\n%w", err)
 	}
 
 	fileMap, err := getMap(strTree)
@@ -71,7 +71,7 @@ func ReadCommit(reader io.Reader) (*Commit, error) {
 func CreateCommit(message, creator string) (*Commit, error) {
 	paths, err := fileIO.GetPathsOfAllFiles()
 	if err != nil {
-		return nil, fmt.Errorf("error getting filenames for creating commit: %w", err)
+		return nil, fmt.Errorf("error getting filenames for creating commit:\n%w", err)
 	}
 
 	fileMap := make(map[string]string, len(paths))

@@ -75,12 +75,12 @@ func initClient() error {
 	address := scanner.Text()
 
 	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("error reading user input: %w", scanner.Err())
+		return fmt.Errorf("error reading user input:\n%w", scanner.Err())
 	}
 
 	metafileData := commands.MetafileData{Username: username, Address: address}
 	if err := metafileData.Save(); err != nil {
-		return fmt.Errorf("error initializing: %w", scanner.Err())
+		return fmt.Errorf("error initializing:\n%w", scanner.Err())
 	}
 	return nil
 }
@@ -93,17 +93,17 @@ func commitList() error {
 
 	c, err := net.Dial("tcp", metafile.Address)
 	if err != nil {
-		return fmt.Errorf("error connecting to server: %w", err)
+		return fmt.Errorf("error connecting to server:\n%w", err)
 	}
 	defer c.Close()
 
 	if err := netIO.SendVarInt(GET_COMMIT_LIST, c); err != nil {
-		return fmt.Errorf("cannot send opcode: %w", err)
+		return fmt.Errorf("cannot send opcode:\n%w", err)
 	}
 
 	commitList, err := commands.GetCommitList(c, c)
 	if err != nil {
-		return fmt.Errorf("cannot execute commit list operation: %w", err)
+		return fmt.Errorf("cannot execute commit list operation:\n%w", err)
 	}
 
 	fmt.Println("Commits on server:")
@@ -125,17 +125,17 @@ func downloadCommit(args []string) error {
 
 	c, err := net.Dial("tcp", metafile.Address)
 	if err != nil {
-		return fmt.Errorf("error connecting to server: %w", err)
+		return fmt.Errorf("error connecting to server:\n%w", err)
 	}
 	defer c.Close()
 
 	if err := netIO.SendVarInt(DOWNLOAD_COMMIT, c); err != nil {
-		return fmt.Errorf("cannot send opcode: %w", err)
+		return fmt.Errorf("cannot send opcode:\n%w", err)
 	}
 
 	message, err := commands.DownloadCommit(args[1], c, c)
 	if err != nil {
-		return fmt.Errorf("cannot execute download commit operation: %w", err)
+		return fmt.Errorf("cannot execute download commit operation:\n%w", err)
 	}
 	fmt.Println(message)
 	return nil
@@ -149,12 +149,12 @@ func uploadCommit() error {
 
 	c, err := net.Dial("tcp", metafile.Address)
 	if err != nil {
-		return fmt.Errorf("error connecting to server: %w", err)
+		return fmt.Errorf("error connecting to server:\n%w", err)
 	}
 	defer c.Close()
 
 	if err := netIO.SendVarInt(UPLOAD_COMMIT, c); err != nil {
-		return fmt.Errorf("cannot send opcode: %w", err)
+		return fmt.Errorf("cannot send opcode:\n%w", err)
 	}
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -164,7 +164,7 @@ func uploadCommit() error {
 
 	err = commands.UploadCommit(message, metafile.Username, c, c)
 	if err != nil {
-		return fmt.Errorf("error uploading commit: %w", err)
+		return fmt.Errorf("error uploading commit:\n%w", err)
 	}
 	fmt.Println("Commit uploaded successfuly!")
 	return nil

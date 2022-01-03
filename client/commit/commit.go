@@ -2,7 +2,7 @@ package commit
 
 import (
 	"crypto/md5"
-	"encoding/base64"
+	"encoding/base32"
 	"errors"
 	"fmt"
 	"io"
@@ -41,17 +41,17 @@ func getTree(fileMap map[string]string) string {
 func (c *Commit) Send(writer io.Writer) error {
 	err := netIO.SendString(c.message, writer)
 	if err != nil {
-		return fmt.Errorf("cannot send commit message: %w", err)
+		return fmt.Errorf("cannot send commit message:\n%w", err)
 	}
 
 	err = netIO.SendString(c.creator, writer)
 	if err != nil {
-		return fmt.Errorf("cannot send commit creator: %w", err)
+		return fmt.Errorf("cannot send commit creator:\n%w", err)
 	}
 
 	err = netIO.SendString(getTree(c.fileMap), writer)
 	if err != nil {
-		return fmt.Errorf("error sending commit tree: %w", err)
+		return fmt.Errorf("error sending commit tree:\n%w", err)
 	}
 
 	return nil
@@ -75,6 +75,6 @@ func (c *Commit) GetMissingFiles() (map[string]string, error) {
 
 func (c *Commit) Md5Hash() string {
 	hash := md5.Sum([]byte(fmt.Sprintf("%v", c)))
-	str := base64.StdEncoding.EncodeToString(hash[:])
+	str := base32.StdEncoding.EncodeToString(hash[:])
 	return str
 }

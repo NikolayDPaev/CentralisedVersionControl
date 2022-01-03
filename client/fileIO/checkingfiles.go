@@ -2,7 +2,7 @@ package fileIO
 
 import (
 	"crypto/md5"
-	"encoding/base64"
+	"encoding/base32"
 	"errors"
 	"fmt"
 	"io"
@@ -25,7 +25,7 @@ func fileExists(filePath string) (bool, error) {
 func GetHashOfFile(filepath string) (string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
-		return "", fmt.Errorf("error opening %s: %w", filepath, err)
+		return "", fmt.Errorf("error opening %s:\n%w", filepath, err)
 	}
 	defer file.Close()
 
@@ -33,16 +33,16 @@ func GetHashOfFile(filepath string) (string, error) {
 	_, err = io.Copy(hash, file)
 
 	if err != nil {
-		return "", fmt.Errorf("error getting hash of %s: %w", filepath, err)
+		return "", fmt.Errorf("error getting hash of %s:\n%w", filepath, err)
 	}
-	str := base64.StdEncoding.EncodeToString(hash.Sum(nil))
+	str := base32.StdEncoding.EncodeToString(hash.Sum(nil))
 	return str, nil
 }
 
 func FileWithHashExists(filepath string, hash string) (bool, error) {
 	fileExists, err := fileExists(filepath)
 	if err != nil {
-		return false, fmt.Errorf("error checking if file exists: %w", err)
+		return false, fmt.Errorf("error checking if file exists:\n%w", err)
 	}
 	if !fileExists {
 		return false, nil
@@ -59,7 +59,7 @@ func FileWithHashExists(filepath string, hash string) (bool, error) {
 func FileSize(path string) (int64, error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
-		return 0, fmt.Errorf("cannot get file %s file info: %w", path, err)
+		return 0, fmt.Errorf("cannot get file %s file info:\n%w", path, err)
 	}
 
 	return fileInfo.Size(), nil
@@ -77,7 +77,7 @@ func GetPathsOfAllFiles() ([]string, error) {
 
 		files, err := ioutil.ReadDir(curDir)
 		if err != nil {
-			return nil, fmt.Errorf("error scanning directory %s: %w", curDir, err)
+			return nil, fmt.Errorf("error scanning directory %s:\n%w", curDir, err)
 		}
 
 		for _, file := range files {
