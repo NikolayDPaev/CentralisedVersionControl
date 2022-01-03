@@ -1,7 +1,6 @@
 package netIO
 
 import (
-	"bufio"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -56,10 +55,10 @@ func ReceiveString(reader io.Reader) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not receive length of string:\n%w", err)
 	}
-
+	fmt.Println(len)
 	bytes := make([]byte, len)
 	n, err := reader.Read(bytes)
-
+	fmt.Println(string(bytes))
 	if n != int(len) {
 		return "", errors.New("length does not match")
 	}
@@ -100,22 +99,21 @@ func ReceiveStringSlice(reader io.Reader) ([]string, error) {
 }
 
 func SendFileData(fileReader io.Reader, fileLength int64, netWriter io.Writer) error {
-	SendVarInt(fileLength, netWriter)
-
-	bufFileReader := bufio.NewReader(fileReader)
-	bufNetWriter := bufio.NewWriter(netWriter)
-	defer bufNetWriter.Flush()
+	err := SendVarInt(fileLength, netWriter)
+	if err != nil {
+		return fmt.Errorf("error sending file length:\n%w", err)
+	}
 
 	buf := make([]byte, CHUNK_SIZE)
 
-	bytesRead, readErr := bufFileReader.Read(buf)
-	_, sendErr := bufNetWriter.Write(buf[:bytesRead])
+	bytesRead, readErr := fileReader.Read(buf)
+	_, sendErr := netWriter.Write(buf[:bytesRead])
 
 	for bytesRead > 0 && readErr == nil && sendErr == nil {
-		bytesRead, readErr = bufFileReader.Read(buf)
-		_, sendErr = bufNetWriter.Write(buf[:bytesRead])
+		bytesRead, readErr = fileReader.Read(buf)
+		_, sendErr = netWriter.Write(buf[:bytesRead])
 	}
-	if readErr != nil {
+	if readErr != nil && !errors.Is(readErr, io.EOF) {
 		return fmt.Errorf("error reading file:\n%w", readErr)
 	}
 	if sendErr != nil {
@@ -130,8 +128,6 @@ func ReceiveFileData(netReader io.Reader, fileWriter io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("error receiving file length:\n%w", err)
 	}
-	bufNetReader := bufio.NewReader(netReader)
-	bufFileWriter := bufio.NewWriter(fileWriter)
 	buf := make([]byte, CHUNK_SIZE)
 
 	var readErr error
@@ -139,9 +135,9 @@ func ReceiveFileData(netReader io.Reader, fileWriter io.Writer) error {
 	var bytesRead int
 
 	for remaining > 0 && readErr == nil && sendErr == nil {
-		bytesRead, readErr = bufNetReader.Read(buf[:min(remaining, CHUNK_SIZE)])
+		bytesRead, readErr = netReader.Read(buf[:min(remaining, CHUNK_SIZE)])
 		remaining -= int64(bytesRead)
-		_, sendErr = bufFileWriter.Write(buf[:bytesRead])
+		_, sendErr = fileWriter.Write(buf[:bytesRead])
 	}
 	if readErr != nil {
 		return fmt.Errorf("error receiving file:\n%w", readErr)

@@ -7,7 +7,7 @@ import (
 
 func blobPath(blobId string) (string, error) {
 	if len(blobId) < 2 {
-		return "", fmt.Errorf("invalid length of blobId:\n%s", blobId)
+		return "", fmt.Errorf("invalid length of blobId: %s", blobId)
 	}
 	return "blobs/" + blobId[:2] + "/" + blobId[2:], nil
 }

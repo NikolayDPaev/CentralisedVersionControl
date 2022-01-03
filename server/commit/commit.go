@@ -9,8 +9,23 @@ import (
 )
 
 type Commit struct {
-	metadata Metadata
-	tree     string
+	id      string
+	message string
+	creator string
+	tree    string
+}
+
+func ReadCommitData(reader io.Reader) (string, string, error) {
+	message, err := netIO.ReceiveString(reader)
+	if err != nil {
+		return "", "", err
+	}
+
+	creator, err := netIO.ReceiveString(reader)
+	if err != nil {
+		return "", "", err
+	}
+	return message, creator, nil
 }
 
 func ReadCommit(reader io.Reader) (*Commit, error) {
@@ -19,7 +34,7 @@ func ReadCommit(reader io.Reader) (*Commit, error) {
 		return nil, fmt.Errorf("cannot read id of commit:\n%w", err)
 	}
 
-	metadata, err := ReadMetadata(reader, id)
+	message, creator, err := ReadCommitData(reader)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read metadata of commit:\n%w", err)
 	}
@@ -29,16 +44,22 @@ func ReadCommit(reader io.Reader) (*Commit, error) {
 		return nil, fmt.Errorf("cannot read tree string of commit:\n%w", err)
 	}
 
-	return &Commit{metadata: *metadata, tree: tree}, nil
+	return &Commit{id, message, creator, tree}, nil
 }
 
 func (c *Commit) Id() string {
-	return c.metadata.id
+	return c.id
 }
 
 func (c *Commit) Write(writer io.Writer) error {
-	if err := c.metadata.Write(writer); err != nil {
-		return fmt.Errorf("cannot write commit metadata:\n%w", err)
+	err := netIO.SendString(c.message, writer)
+	if err != nil {
+		return fmt.Errorf("cannot send commit message:\n%w", err)
+	}
+
+	err = netIO.SendString(c.creator, writer)
+	if err != nil {
+		return fmt.Errorf("cannot send commit creator:\n%w", err)
 	}
 
 	if err := netIO.SendString(c.tree, writer); err != nil {
@@ -60,5 +81,5 @@ func (c *Commit) ExtractBlobIds() []string { // regex ????
 }
 
 func (c Commit) String() string {
-	return c.metadata.String()
+	return c.id + " \"" + c.message + "\" " + c.creator
 }

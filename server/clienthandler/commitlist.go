@@ -16,7 +16,7 @@ func sendCommitList(writer io.Writer) error {
 	}
 
 	for _, entry := range metadataList {
-		err := netIO.SendString(entry.String(), writer)
+		err := netIO.SendString(entry, writer)
 		if err != nil {
 			return fmt.Errorf("could not send metadata entry:\n%w", err)
 		}

@@ -23,21 +23,21 @@ func fileExists(filePath string) (bool, error) {
 	}
 }
 
-func extractMetadata(fileInfo fs.FileInfo) (*commit.Metadata, error) {
+func extractCommitData(fileInfo fs.FileInfo) (string, error) {
 	file, err := os.Open("commits/" + fileInfo.Name())
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	defer file.Close()
 
-	result, err := commit.ReadMetadata(file, fileInfo.Name())
+	message, creator, err := commit.ReadCommitData(file)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return result, nil
+	return fileInfo.Name() + " \"" + message + "\" " + creator, nil
 }
 
-func CommitList() []*commit.Metadata {
+func CommitList() []string {
 	f, err := os.Open("./commits")
 	if err != nil {
 		log.Println(err.Error())
@@ -55,9 +55,9 @@ func CommitList() []*commit.Metadata {
 		return files[i].ModTime().Before(files[j].ModTime())
 	})
 
-	result := make([]*commit.Metadata, len(files))
+	result := make([]string, len(files))
 	for i, v := range files {
-		result[i], err = extractMetadata(v)
+		result[i], err = extractCommitData(v)
 		if err != nil {
 			continue
 		}
@@ -74,6 +74,10 @@ func OpenCommit(commitId string) (*os.File, error) {
 }
 
 func NewCommit(commitId string) (*os.File, error) {
+	if err := os.MkdirAll("commits", 0777); err != nil {
+		return nil, fmt.Errorf("cannot create commit folder:\n%w", err)
+	}
+
 	file, err := os.Create("commits/" + commitId)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create commit file %s:\n%w", commitId, err)
