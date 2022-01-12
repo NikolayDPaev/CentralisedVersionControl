@@ -9,6 +9,7 @@ import (
 	"sort"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/commit"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
 
 func fileExists(filePath string) (bool, error) {
@@ -23,14 +24,15 @@ func fileExists(filePath string) (bool, error) {
 	}
 }
 
-func extractCommitData(fileInfo fs.FileInfo) (string, error) {
+func extractCommitData(fileInfo fs.FileInfo) (string, error) { // !!!
 	file, err := os.Open("commits/" + fileInfo.Name())
 	if err != nil {
 		return "", err
 	}
 	defer file.Close()
 
-	message, creator, err := commit.ReadCommitData(file)
+	comm := netIO.NewCommunicator(100, file, file)
+	message, creator, err := commit.ReadCommitData(comm)
 	if err != nil {
 		return "", err
 	}

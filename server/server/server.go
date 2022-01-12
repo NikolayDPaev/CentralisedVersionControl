@@ -10,6 +10,8 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
 
+const CHUNK_SIZE = 4096
+
 type Server struct {
 	port    string
 	wg      sync.WaitGroup
@@ -39,14 +41,22 @@ func (s *Server) sendEmptyRequest() error {
 		return fmt.Errorf("error creating poison socket:\n%w", err)
 	}
 	defer c.Close()
-	if err := netIO.SendVarInt(clienthandler.EMPTY_REQUEST, c); err != nil {
+
+	comm := netIO.NewCommunicator(CHUNK_SIZE, c, c)
+	if err := comm.SendVarInt(clienthandler.EMPTY_REQUEST); err != nil {
 		return fmt.Errorf("error sending empty request:\n%w", err)
 	}
 	return nil
 }
 
 func handleClient(c net.Conn, wg *sync.WaitGroup) {
-	if err := clienthandler.Communication(c, c); err != nil {
+	comm := netIO.NewCommunicator(CHUNK_SIZE, c, c)
+	clientHandler, err := clienthandler.NewHandler(comm)
+	if err != nil {
+		log.Println(err)
+	}
+	err = clientHandler.Handle()
+	if err != nil {
 		log.Println(err)
 	}
 	c.Close()

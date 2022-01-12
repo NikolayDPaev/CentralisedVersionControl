@@ -2,14 +2,17 @@ package clienthandler
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/commit"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/fileIO"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
 
-func getMissingBlobIds(commit *commit.Commit) ([]string, error) {
+type ReceiveCommit struct {
+	comm netIO.Communicator
+}
+
+func (r *ReceiveCommit) getMissingBlobIds(commit *commit.Commit) ([]string, error) {
 	commitBlobIds := commit.ExtractBlobIds()
 	//missingBlobIds := make([]string, len(commitBlobIds)/2)
 	var missingBlobIds []string
@@ -27,8 +30,8 @@ func getMissingBlobIds(commit *commit.Commit) ([]string, error) {
 	return missingBlobIds, nil
 }
 
-func receiveBlob(reader io.Reader) error {
-	blobId, err := netIO.ReceiveString(reader)
+func (r *ReceiveCommit) receiveBlob() error {
+	blobId, err := r.comm.ReceiveString()
 	if err != nil {
 		return fmt.Errorf("error receiving blobId:\n%w", err)
 	}
@@ -38,51 +41,61 @@ func receiveBlob(reader io.Reader) error {
 	}
 	defer file.Close()
 
-	err = netIO.ReceiveFileData(reader, file)
+	err = r.comm.ReceiveFileData(file)
 	if err != nil {
-		return fmt.Errorf("error receiving blob:\n%w", err)
+		return err
 	}
 
 	return nil
 }
 
-func saveCommit(commit *commit.Commit) error {
+func (r *ReceiveCommit) saveCommit(commit *commit.Commit) error { // !!!
 	commitFile, err := fileIO.NewCommit(commit.Id())
 	if err != nil {
 		return fmt.Errorf("error creating commit file for commit %s: %w", commit.String(), err)
 	}
 	defer commitFile.Close()
 
-	if err := commit.Write(commitFile); err != nil {
+	comm := netIO.NewCommunicator(100, commitFile, commitFile)
+	if err := commit.Write(comm); err != nil {
 		return fmt.Errorf("error saving commit %s: %w", commit.String(), err)
 	}
 	return nil
 }
 
-func receiveCommit(reader io.Reader, writer io.Writer) error {
-	commit, err := commit.ReadCommit(reader)
+func (r *ReceiveCommit) receiveCommit() error {
+	id, err := r.comm.ReceiveString()
+	if err != nil {
+		return fmt.Errorf("cannot read id of commit:\n%w", err)
+	}
+
+	commit, err := commit.ReadCommit(id, r.comm)
 	if err != nil {
 		return fmt.Errorf("error receiving commit: %w", err)
 	}
 
-	missingBlobIds, err := getMissingBlobIds(commit)
+	missingBlobIds, err := r.getMissingBlobIds(commit)
 	if err != nil {
 		return fmt.Errorf("error getting missing blobIds from commit %s: %w", commit.String(), err)
 	}
 
-	err = netIO.SendStringSlice(missingBlobIds, writer)
+	err = r.comm.SendStringSlice(missingBlobIds)
 	if err != nil {
 		return fmt.Errorf("error sending missing blobIds from commit %s: %w", commit.String(), err)
 	}
 
 	for range missingBlobIds { // gonna receive the requested number of blobs
-		if err := receiveBlob(reader); err != nil {
+		if err := r.receiveBlob(); err != nil {
 			return err
 		}
 	}
 	// mutex ???
-	if err := saveCommit(commit); err != nil {
+	if err := r.saveCommit(commit); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (r *ReceiveCommit) Handle() error {
+	return r.receiveCommit()
 }

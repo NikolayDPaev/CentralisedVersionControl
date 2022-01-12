@@ -2,7 +2,6 @@ package commit
 
 import (
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
@@ -15,31 +14,26 @@ type Commit struct {
 	tree    string
 }
 
-func ReadCommitData(reader io.Reader) (string, string, error) {
-	message, err := netIO.ReceiveString(reader)
+func ReadCommitData(comm netIO.Communicator) (string, string, error) {
+	message, err := comm.ReceiveString()
 	if err != nil {
 		return "", "", err
 	}
 
-	creator, err := netIO.ReceiveString(reader)
+	creator, err := comm.ReceiveString()
 	if err != nil {
 		return "", "", err
 	}
 	return message, creator, nil
 }
 
-func ReadCommit(reader io.Reader) (*Commit, error) {
-	id, err := netIO.ReceiveString(reader)
-	if err != nil {
-		return nil, fmt.Errorf("cannot read id of commit:\n%w", err)
-	}
-
-	message, creator, err := ReadCommitData(reader)
+func ReadCommit(id string, comm netIO.Communicator) (*Commit, error) {
+	message, creator, err := ReadCommitData(comm)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read metadata of commit:\n%w", err)
 	}
 
-	tree, err := netIO.ReceiveString(reader)
+	tree, err := comm.ReceiveString()
 	if err != nil {
 		return nil, fmt.Errorf("cannot read tree string of commit:\n%w", err)
 	}
@@ -51,18 +45,18 @@ func (c *Commit) Id() string {
 	return c.id
 }
 
-func (c *Commit) Write(writer io.Writer) error {
-	err := netIO.SendString(c.message, writer)
+func (c *Commit) Write(comm netIO.Communicator) error {
+	err := comm.SendString(c.message)
 	if err != nil {
 		return fmt.Errorf("cannot send commit message:\n%w", err)
 	}
 
-	err = netIO.SendString(c.creator, writer)
+	err = comm.SendString(c.creator)
 	if err != nil {
 		return fmt.Errorf("cannot send commit creator:\n%w", err)
 	}
 
-	if err := netIO.SendString(c.tree, writer); err != nil {
+	if err := comm.SendString(c.tree); err != nil {
 		return fmt.Errorf("cannot write commit tree:\n%w", err)
 	}
 

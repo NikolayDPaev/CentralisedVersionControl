@@ -2,7 +2,6 @@ package clienthandler
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
@@ -14,22 +13,26 @@ const (
 	EMPTY_REQUEST   = 3
 )
 
-func Communication(reader io.Reader, writer io.Writer) error {
-	opCode, err := netIO.ReceiveVarInt(reader)
+type Clienthandler interface {
+	Handle() error
+}
+
+func NewHandler(comm netIO.Communicator) (Clienthandler, error) {
+	opCode, err := comm.ReceiveVarInt()
 	if err != nil {
-		return fmt.Errorf("could not receive opcode:\n%w", err)
+		return nil, fmt.Errorf("could not receive opcode:\n%w", err)
 	}
 
 	switch opCode {
 	case GET_COMMIT_LIST:
-		err = sendCommitList(writer)
+		return &CommitList{comm}, nil
 	case UPLOAD_COMMIT:
-		err = receiveCommit(reader, writer)
+		return &ReceiveCommit{comm}, nil
 	case DOWNLOAD_COMMIT:
-		err = sendCommit(reader, writer)
+		return &SendCommit{comm}, nil
 	case EMPTY_REQUEST:
-		return nil
+		return nil, nil
 	}
 
-	return err
+	return nil, fmt.Errorf("invalid opcode %d", opCode)
 }

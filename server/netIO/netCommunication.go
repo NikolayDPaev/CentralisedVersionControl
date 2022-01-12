@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	CHUNK_SIZE       = 4096
 	UINT_32_BYTE_LEN = 4
 	INT_64_BYTE_LEN  = 8
 )
@@ -20,45 +19,55 @@ func min(a, b int64) int64 {
 	return b
 }
 
-func SendVarInt(num int64, writer io.Writer) error {
+type NetCommunication struct {
+	chunkSize int
+	writer    io.Writer
+	reader    io.Reader
+}
+
+func NewCommunicator(chunkSize int, writer io.Writer, reader io.Reader) Communicator {
+	return &NetCommunication{chunkSize, writer, reader}
+}
+
+func (c *NetCommunication) SendVarInt(num int64) error {
 	buf := make([]byte, INT_64_BYTE_LEN)
 	bytes := binary.PutVarint(buf, num)
 
-	if n, err := writer.Write(buf[:bytes]); err != nil || n != bytes {
+	if n, err := c.writer.Write(buf[:bytes]); err != nil || n != bytes {
 		return fmt.Errorf("error sending var int %d:\n%w", num, err)
 	}
 	return nil
 }
 
-func ReceiveVarInt(reader io.Reader) (int64, error) {
-	num, err := ReadVarint(reader)
+func (c *NetCommunication) ReceiveVarInt() (int64, error) {
+	num, err := ReadVarint(c.reader)
 	if err != nil {
 		return 0, fmt.Errorf("error reading var int:\n%w", err)
 	}
 	return num, nil
 }
 
-func SendString(str string, writer io.Writer) error {
+func (c *NetCommunication) SendString(str string) error {
 	strBuf := []byte(str)
-	err := SendVarInt(int64(len(strBuf)), writer)
+	err := c.SendVarInt(int64(len(strBuf)))
 	if err != nil {
 		return fmt.Errorf("could not send length of string:\n%w", err)
 	}
-	if n, err := writer.Write(strBuf); err != nil || n != len(strBuf) {
+	if n, err := c.writer.Write(strBuf); err != nil || n != len(strBuf) {
 		return fmt.Errorf("error sending string %s:\n%w", str, err)
 	}
 	return nil
 }
 
-func ReceiveString(reader io.Reader) (string, error) {
-	len, err := ReceiveVarInt(reader)
+func (c *NetCommunication) ReceiveString() (string, error) {
+	len, err := c.ReceiveVarInt()
 	if err != nil {
 		return "", fmt.Errorf("could not receive length of string:\n%w", err)
 	}
-	fmt.Println(len)
+
 	bytes := make([]byte, len)
-	n, err := reader.Read(bytes)
-	fmt.Println(string(bytes))
+	n, err := c.reader.Read(bytes)
+
 	if n != int(len) {
 		return "", errors.New("length does not match")
 	}
@@ -69,28 +78,28 @@ func ReceiveString(reader io.Reader) (string, error) {
 	return string(bytes), nil
 }
 
-func SendStringSlice(slice []string, writer io.Writer) error {
-	if err := SendVarInt(int64(len(slice)), writer); err != nil {
+func (c *NetCommunication) SendStringSlice(slice []string) error {
+	if err := c.SendVarInt(int64(len(slice))); err != nil {
 		return fmt.Errorf("error sending string slice size:\n%w", err)
 	}
 
 	for _, str := range slice {
-		if err := SendString(str, writer); err != nil {
+		if err := c.SendString(str); err != nil {
 			return fmt.Errorf("error sending string slice:\n%w", err)
 		}
 	}
 	return nil
 }
 
-func ReceiveStringSlice(reader io.Reader) ([]string, error) {
-	len, err := ReceiveVarInt(reader)
+func (c *NetCommunication) ReceiveStringSlice() ([]string, error) {
+	len, err := c.ReceiveVarInt()
 	if err != nil {
 		return nil, fmt.Errorf("error receiving string slice size:\n%w", err)
 	}
 
 	slice := make([]string, len)
 	for i := 0; i < int(len); i++ {
-		slice[i], err = ReceiveString(reader)
+		slice[i], err = c.ReceiveString()
 		if err != nil {
 			return nil, fmt.Errorf("error receiving string slice:\n%w", err)
 		}
@@ -98,20 +107,20 @@ func ReceiveStringSlice(reader io.Reader) ([]string, error) {
 	return slice, nil
 }
 
-func SendFileData(fileReader io.Reader, fileLength int64, netWriter io.Writer) error {
-	err := SendVarInt(fileLength, netWriter)
+func (c *NetCommunication) SendFileData(fileReader io.Reader, fileLength int64) error {
+	err := c.SendVarInt(fileLength)
 	if err != nil {
 		return fmt.Errorf("error sending file length:\n%w", err)
 	}
 
-	buf := make([]byte, CHUNK_SIZE)
+	buf := make([]byte, c.chunkSize)
 
 	bytesRead, readErr := fileReader.Read(buf)
-	_, sendErr := netWriter.Write(buf[:bytesRead])
+	_, sendErr := c.writer.Write(buf[:bytesRead])
 
 	for bytesRead > 0 && readErr == nil && sendErr == nil {
 		bytesRead, readErr = fileReader.Read(buf)
-		_, sendErr = netWriter.Write(buf[:bytesRead])
+		_, sendErr = c.writer.Write(buf[:bytesRead])
 	}
 	if readErr != nil && !errors.Is(readErr, io.EOF) {
 		return fmt.Errorf("error reading file:\n%w", readErr)
@@ -123,19 +132,19 @@ func SendFileData(fileReader io.Reader, fileLength int64, netWriter io.Writer) e
 	return nil
 }
 
-func ReceiveFileData(netReader io.Reader, fileWriter io.Writer) error {
-	remaining, err := ReceiveVarInt(netReader)
+func (c *NetCommunication) ReceiveFileData(fileWriter io.Writer) error {
+	remaining, err := c.ReceiveVarInt()
 	if err != nil {
 		return fmt.Errorf("error receiving file length:\n%w", err)
 	}
-	buf := make([]byte, CHUNK_SIZE)
+	buf := make([]byte, c.chunkSize)
 
 	var readErr error
 	var sendErr error
 	var bytesRead int
 
 	for remaining > 0 && readErr == nil && sendErr == nil {
-		bytesRead, readErr = netReader.Read(buf[:min(remaining, CHUNK_SIZE)])
+		bytesRead, readErr = c.reader.Read(buf[:min(remaining, int64(c.chunkSize))])
 		remaining -= int64(bytesRead)
 		_, sendErr = fileWriter.Write(buf[:bytesRead])
 	}
