@@ -14,11 +14,16 @@ const (
 )
 
 type SendCommit struct {
-	comm netIO.Communicator
+	comm    netIO.Communicator
+	storage fileIO.Storage
+}
+
+func NewSendCommit(comm netIO.Communicator, storage fileIO.Storage) *ReceiveCommit {
+	return &ReceiveCommit{comm, storage}
 }
 
 func (s *SendCommit) sendCommitData(commitId string) error {
-	commitFile, err := fileIO.OpenCommit(commitId)
+	commitFile, err := s.storage.OpenCommit(commitId)
 	if err != nil {
 		return fmt.Errorf("error opening commit file of commit %s: %s", commitId, err)
 	}
@@ -37,7 +42,7 @@ func (s *SendCommit) sendCommitData(commitId string) error {
 }
 
 func (s *SendCommit) sendBlob(blobId string) error {
-	file, err := fileIO.OpenBlob(blobId)
+	file, err := s.storage.OpenBlob(blobId)
 	if err != nil {
 		return fmt.Errorf("error opening blob %s:\n%w", blobId, err)
 	}
@@ -47,7 +52,7 @@ func (s *SendCommit) sendBlob(blobId string) error {
 		return fmt.Errorf("error sending blobId %s:\n%w", blobId, err)
 	}
 
-	size, err := fileIO.BlobSize(blobId)
+	size, err := s.storage.BlobSize(blobId)
 	if err != nil {
 		return fmt.Errorf("error getting blob %s size:\n%w", blobId, err)
 	}
@@ -61,7 +66,7 @@ func (s *SendCommit) sendBlob(blobId string) error {
 }
 
 func (s *SendCommit) validateCommitId(commitId string) (bool, error) {
-	exists, err := fileIO.CommitExists(commitId)
+	exists, err := s.storage.CommitExists(commitId)
 	if err != nil {
 		return false, err
 	}

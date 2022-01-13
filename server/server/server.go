@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/clienthandler"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/fileIO"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
 
@@ -51,7 +52,7 @@ func (s *Server) sendEmptyRequest() error {
 
 func handleClient(c net.Conn, wg *sync.WaitGroup) {
 	comm := netIO.NewCommunicator(CHUNK_SIZE, c, c)
-	clientHandler, err := clienthandler.NewHandler(comm)
+	clientHandler, err := clienthandler.NewHandler(comm, &fileIO.FileStorage{})
 	if err != nil {
 		log.Println(err)
 	}

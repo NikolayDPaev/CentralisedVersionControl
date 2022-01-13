@@ -9,7 +9,12 @@ import (
 )
 
 type ReceiveCommit struct {
-	comm netIO.Communicator
+	comm    netIO.Communicator
+	storage fileIO.Storage
+}
+
+func NewReceiveCommit(comm netIO.Communicator, storage fileIO.Storage) *ReceiveCommit {
+	return &ReceiveCommit{comm, storage}
 }
 
 func (r *ReceiveCommit) getMissingBlobIds(commit *commit.Commit) ([]string, error) {
@@ -18,7 +23,7 @@ func (r *ReceiveCommit) getMissingBlobIds(commit *commit.Commit) ([]string, erro
 	var missingBlobIds []string
 
 	for _, blobId := range commitBlobIds {
-		exists, err := fileIO.BlobExists(blobId)
+		exists, err := r.storage.BlobExists(blobId)
 		if err != nil {
 			return nil, fmt.Errorf("cannot check existence of blob %s:\n%w", blobId, err)
 		}
@@ -35,7 +40,7 @@ func (r *ReceiveCommit) receiveBlob() error {
 	if err != nil {
 		return fmt.Errorf("error receiving blobId:\n%w", err)
 	}
-	file, err := fileIO.NewBlob(blobId)
+	file, err := r.storage.NewBlob(blobId)
 	if err != nil {
 		return fmt.Errorf("error creating blob:\n%w", err)
 	}
@@ -50,7 +55,7 @@ func (r *ReceiveCommit) receiveBlob() error {
 }
 
 func (r *ReceiveCommit) saveCommit(commit *commit.Commit) error { // !!!
-	commitFile, err := fileIO.NewCommit(commit.Id())
+	commitFile, err := r.storage.NewCommit(commit.Id())
 	if err != nil {
 		return fmt.Errorf("error creating commit file for commit %s: %w", commit.String(), err)
 	}

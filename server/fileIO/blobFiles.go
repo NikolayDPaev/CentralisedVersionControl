@@ -12,7 +12,7 @@ func blobPath(blobId string) (string, error) {
 	return "blobs/" + blobId[:2] + "/" + blobId[2:], nil
 }
 
-func OpenBlob(blobId string) (*os.File, error) {
+func (s *FileStorage) OpenBlob(blobId string) (StorageEntry, error) {
 	path, err := blobPath(blobId)
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func OpenBlob(blobId string) (*os.File, error) {
 	return file, nil
 }
 
-func NewBlob(blobId string) (*os.File, error) {
+func (s *FileStorage) NewBlob(blobId string) (StorageEntry, error) {
 	path, err := blobPath(blobId)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func NewBlob(blobId string) (*os.File, error) {
 	return file, nil
 }
 
-func BlobExists(blobId string) (bool, error) {
+func (s *FileStorage) BlobExists(blobId string) (bool, error) {
 	path, err := blobPath(blobId)
 	if err != nil {
 		return false, err
@@ -53,7 +53,7 @@ func BlobExists(blobId string) (bool, error) {
 	return b, nil
 }
 
-func BlobSize(blobId string) (int64, error) {
+func (s *FileStorage) BlobSize(blobId string) (int64, error) {
 	path, err := blobPath(blobId)
 	if err != nil {
 		return 0, err

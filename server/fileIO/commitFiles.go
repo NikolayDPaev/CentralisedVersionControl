@@ -39,7 +39,7 @@ func extractCommitData(fileInfo fs.FileInfo) (string, error) { // !!!
 	return fileInfo.Name() + " \"" + message + "\" " + creator, nil
 }
 
-func CommitList() []string {
+func (s *FileStorage) CommitList() []string {
 	f, err := os.Open("./commits")
 	if err != nil {
 		log.Println(err.Error())
@@ -67,7 +67,7 @@ func CommitList() []string {
 	return result
 }
 
-func OpenCommit(commitId string) (*os.File, error) {
+func (s *FileStorage) OpenCommit(commitId string) (StorageEntry, error) {
 	file, err := os.Open("commits/" + commitId)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open commit %s:\n%w", commitId, err)
@@ -75,7 +75,7 @@ func OpenCommit(commitId string) (*os.File, error) {
 	return file, nil
 }
 
-func NewCommit(commitId string) (*os.File, error) {
+func (s *FileStorage) NewCommit(commitId string) (StorageEntry, error) {
 	if err := os.MkdirAll("commits", 0777); err != nil {
 		return nil, fmt.Errorf("cannot create commit folder:\n%w", err)
 	}
@@ -87,7 +87,7 @@ func NewCommit(commitId string) (*os.File, error) {
 	return file, nil
 }
 
-func CommitSize(commitId string) (int64, error) {
+func (s *FileStorage) CommitSize(commitId string) (int64, error) {
 	fileInfo, err := os.Stat("commits/" + commitId)
 	if err != nil {
 		return 0, fmt.Errorf("cannot get commit %s file info:\n%w", commitId, err)
@@ -96,7 +96,7 @@ func CommitSize(commitId string) (int64, error) {
 	return fileInfo.Size(), nil
 }
 
-func CommitExists(commitId string) (bool, error) {
+func (s *FileStorage) CommitExists(commitId string) (bool, error) {
 	b, err := fileExists("commits/" + commitId)
 	if err != nil {
 		return false, err

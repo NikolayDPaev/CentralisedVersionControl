@@ -3,6 +3,7 @@ package clienthandler
 import (
 	"fmt"
 
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/fileIO"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
 
@@ -17,7 +18,7 @@ type Clienthandler interface {
 	Handle() error
 }
 
-func NewHandler(comm netIO.Communicator) (Clienthandler, error) {
+func NewHandler(comm netIO.Communicator, storage fileIO.Storage) (Clienthandler, error) {
 	opCode, err := comm.ReceiveVarInt()
 	if err != nil {
 		return nil, fmt.Errorf("could not receive opcode:\n%w", err)
@@ -25,11 +26,11 @@ func NewHandler(comm netIO.Communicator) (Clienthandler, error) {
 
 	switch opCode {
 	case GET_COMMIT_LIST:
-		return &CommitList{comm}, nil
+		return NewCommitList(comm, storage), nil
 	case UPLOAD_COMMIT:
-		return &ReceiveCommit{comm}, nil
+		return NewReceiveCommit(comm, storage), nil
 	case DOWNLOAD_COMMIT:
-		return &SendCommit{comm}, nil
+		return NewSendCommit(comm, storage), nil
 	case EMPTY_REQUEST:
 		return nil, nil
 	}
