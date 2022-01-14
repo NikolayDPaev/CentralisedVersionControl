@@ -40,31 +40,11 @@ func (r *ReceiveCommit) receiveBlob() error {
 	if err != nil {
 		return fmt.Errorf("error receiving blobId:\n%w", err)
 	}
-	file, err := r.storage.NewBlob(blobId)
+	err = r.storage.SaveBlob(blobId, r.comm)
 	if err != nil {
 		return fmt.Errorf("error creating blob:\n%w", err)
 	}
-	defer file.Close()
 
-	err = r.comm.ReceiveFileData(file)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *ReceiveCommit) saveCommit(commit *commit.Commit) error { // !!!
-	commitFile, err := r.storage.NewCommit(commit.Id())
-	if err != nil {
-		return fmt.Errorf("error creating commit file for commit %s: %w", commit.String(), err)
-	}
-	defer commitFile.Close()
-
-	comm := netIO.NewCommunicator(100, commitFile, commitFile)
-	if err := commit.Write(comm); err != nil {
-		return fmt.Errorf("error saving commit %s: %w", commit.String(), err)
-	}
 	return nil
 }
 
@@ -95,7 +75,7 @@ func (r *ReceiveCommit) receiveCommit() error {
 		}
 	}
 	// mutex ???
-	if err := r.saveCommit(commit); err != nil {
+	if err := r.storage.SaveCommit(commit); err != nil {
 		return err
 	}
 	return nil

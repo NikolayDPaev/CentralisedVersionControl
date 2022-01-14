@@ -3,7 +3,9 @@ package clienthandler_test
 import (
 	"io"
 
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/commit"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/fileIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
 
 type communicatorDefMock struct{}
@@ -38,8 +40,8 @@ type storageDefMock struct{}
 func (s *storageDefMock) OpenBlob(blobId string) (fileIO.StorageEntry, error) {
 	return nil, nil
 }
-func (s *storageDefMock) NewBlob(blobId string) (fileIO.StorageEntry, error) {
-	return nil, nil
+func (s *storageDefMock) SaveBlob(blobId string, comm netIO.Communicator) error {
+	return nil
 }
 func (s *storageDefMock) BlobExists(blobId string) (bool, error) {
 	return false, nil
@@ -53,8 +55,8 @@ func (s *storageDefMock) CommitList() []string {
 func (s *storageDefMock) OpenCommit(commitId string) (fileIO.StorageEntry, error) {
 	return nil, nil
 }
-func (s *storageDefMock) NewCommit(commitId string) (fileIO.StorageEntry, error) {
-	return nil, nil
+func (s *storageDefMock) SaveCommit(commit *commit.Commit) error {
+	return nil
 }
 func (s *storageDefMock) CommitSize(commitId string) (int64, error) {
 	return 0, nil

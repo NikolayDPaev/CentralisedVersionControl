@@ -75,16 +75,22 @@ func (s *FileStorage) OpenCommit(commitId string) (StorageEntry, error) {
 	return file, nil
 }
 
-func (s *FileStorage) NewCommit(commitId string) (StorageEntry, error) {
+func (s *FileStorage) SaveCommit(commit *commit.Commit) error {
 	if err := os.MkdirAll("commits", 0777); err != nil {
-		return nil, fmt.Errorf("cannot create commit folder:\n%w", err)
+		return fmt.Errorf("cannot create commit folder:\n%w", err)
 	}
 
-	file, err := os.Create("commits/" + commitId)
+	file, err := os.Create("commits/" + commit.Id())
 	if err != nil {
-		return nil, fmt.Errorf("cannot create commit file %s:\n%w", commitId, err)
+		return fmt.Errorf("cannot create commit file %s:\n%w", commit.Id(), err)
 	}
-	return file, nil
+	defer file.Close()
+
+	comm := netIO.NewCommunicator(100, file, file)
+	if err := commit.Write(comm); err != nil {
+		return fmt.Errorf("error saving commit %s: %w", commit.String(), err)
+	}
+	return nil
 }
 
 func (s *FileStorage) CommitSize(commitId string) (int64, error) {

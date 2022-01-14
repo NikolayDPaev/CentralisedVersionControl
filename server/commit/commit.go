@@ -14,6 +14,10 @@ type Commit struct {
 	tree    string
 }
 
+func NewCommit(id, message, creator, tree string) *Commit {
+	return &Commit{id, message, creator, tree}
+}
+
 func ReadCommitData(comm netIO.Communicator) (string, string, error) {
 	message, err := comm.ReceiveString()
 	if err != nil {

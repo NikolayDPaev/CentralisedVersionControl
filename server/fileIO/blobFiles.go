@@ -3,6 +3,8 @@ package fileIO
 import (
 	"fmt"
 	"os"
+
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
 
 func blobPath(blobId string) (string, error) {
@@ -24,21 +26,27 @@ func (s *FileStorage) OpenBlob(blobId string) (StorageEntry, error) {
 	return file, nil
 }
 
-func (s *FileStorage) NewBlob(blobId string) (StorageEntry, error) {
+func (s *FileStorage) SaveBlob(blobId string, comm netIO.Communicator) error {
 	path, err := blobPath(blobId)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := os.MkdirAll("blobs/"+blobId[:2], 0777); err != nil {
-		return nil, fmt.Errorf("cannot create blob folder %s:\n%w", blobId, err)
+		return fmt.Errorf("cannot create blob folder %s:\n%w", blobId, err)
 	}
 
 	file, err := os.Create(path)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create blob file %s:\n%w", blobId, err)
+		return fmt.Errorf("cannot create blob file %s:\n%w", blobId, err)
 	}
-	return file, nil
+	defer file.Close()
+
+	err = comm.ReceiveFileData(file)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *FileStorage) BlobExists(blobId string) (bool, error) {
