@@ -91,3 +91,55 @@ func GetPathsOfAllFiles() ([]string, error) {
 
 	return paths, nil
 }
+
+func removeDirIfEmpty(dir string) error {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("error scanning directory %s:\n%w", dir, err)
+	}
+	if len(files) == 0 {
+		if err := os.Remove(dir); err != nil {
+			return fmt.Errorf("error deleting empty directory %s:\n%w", dir, err)
+		}
+	}
+	return nil
+}
+
+func deleteFileIfNotInSet(file string, filesSet map[string]struct{}) error {
+	if _, ok := filesSet[file]; !ok {
+		if err := os.Remove(file); err != nil {
+			return fmt.Errorf("error deleting file %s:\n%w", file, err)
+		}
+	}
+	return nil
+}
+
+func CleanOtherFiles(commitFilesSet map[string]struct{}) error {
+	var stack []string
+	stack = append(stack, ".")
+	for len(stack) > 0 {
+		n := len(stack) - 1
+		curDir := stack[n] // top
+		stack = stack[:n]  // pop
+
+		files, err := ioutil.ReadDir(curDir)
+		if err != nil {
+			return fmt.Errorf("error scanning directory %s:\n%w", curDir, err)
+		}
+
+		for _, file := range files {
+			if file.IsDir() {
+				stack = append(stack, curDir+"/"+file.Name())
+			} else {
+				file := curDir + "/" + file.Name()
+				if err := deleteFileIfNotInSet(file, commitFilesSet); err != nil {
+					return err
+				}
+			}
+		}
+		if err := removeDirIfEmpty(curDir); err != nil {
+			return err
+		}
+	}
+	return nil
+}
