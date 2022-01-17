@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 const (
@@ -41,10 +42,20 @@ func CompressToTempFile(source string) (*os.File, error) {
 	return dFile, nil
 }
 
+func createDirectoriesInPath(dest string) error {
+	if err := os.MkdirAll(filepath.Dir(dest), 0777); err != nil {
+		return fmt.Errorf("cannot create path:\n%w", err)
+	}
+	return nil
+}
+
 func DecompressFile(dest string, sFile *os.File) error {
+	if err := createDirectoriesInPath(dest); err != nil {
+		return fmt.Errorf("error creating file directory:\n%w", err)
+	}
 	dFile, err := os.Create(dest)
 	if err != nil {
-		return fmt.Errorf("error creating decompressed file:\n%w", err)
+		return fmt.Errorf("error creating file:\n%w", err)
 	}
 	defer sFile.Close()
 

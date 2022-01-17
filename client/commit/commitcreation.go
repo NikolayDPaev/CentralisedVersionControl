@@ -40,12 +40,7 @@ func getMap(tree string) (map[string]string, error) {
 	return fileMap, nil
 }
 
-func ReadCommit(reader io.Reader) (*Commit, error) {
-	id, err := netIO.ReceiveString(reader)
-	if err != nil {
-		return nil, fmt.Errorf("cannot read id of commit:\n%w", err)
-	}
-
+func ReadCommit(id string, reader io.Reader) (*Commit, error) {
 	message, creator, err := readMetadata(reader)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read metadata of commit:\n%w", err)

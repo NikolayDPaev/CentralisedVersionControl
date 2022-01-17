@@ -23,13 +23,15 @@ func receiveCommit(commitId string, reader io.Reader, writer io.Writer) (*commit
 
 	code, err := netIO.ReceiveVarInt(reader)
 	if err != nil {
-		return nil, fmt.Errorf("error receiving success code:\n%w", err)
+		return nil, fmt.Errorf("error no such commit on server:\n%w", err)
 	}
 	if code != OK {
 		return nil, errInvalidCommitId
 	}
 
-	commit, err := commit.ReadCommit(reader)
+	fmt.Println("Receiving commit")
+
+	commit, err := commit.ReadCommit(commitId, reader)
 	if err != nil {
 		return nil, fmt.Errorf("error receiving commit:\n%w", err)
 	}
@@ -53,7 +55,9 @@ func receiveBlob(missingFilesMap map[string]string, reader io.Reader) error {
 		return fmt.Errorf("error receiving blob:\n%w", err)
 	}
 
-	fileIO.DecompressFile(fileName, tmp)
+	if err := fileIO.DecompressFile(fileName, tmp); err != nil {
+		return fmt.Errorf("error decompressing blob:\n%w", err)
+	}
 	return nil
 }
 
@@ -68,6 +72,7 @@ func receiveBlobs(missingFilesMap map[string]string, reader io.Reader) error {
 }
 
 func DownloadCommit(commitId string, reader io.Reader, writer io.Writer) (string, error) {
+	fmt.Printf("Requesting commit %s\n", commitId)
 	commit, err := receiveCommit(commitId, reader, writer)
 	if err != nil {
 		if errors.Is(err, errInvalidCommitId) {
@@ -85,14 +90,16 @@ func DownloadCommit(commitId string, reader io.Reader, writer io.Writer) (string
 	}
 
 	missingBlobIds := make([]string, 0, len(missingFilesMap))
-	for k := range missingFilesMap {
+	for k, _ := range missingFilesMap {
 		missingBlobIds = append(missingBlobIds, k)
 	}
 
+	fmt.Printf("Requesting missing files\n")
 	if err := netIO.SendStringSlice(missingBlobIds, writer); err != nil {
 		return "", fmt.Errorf("error sending missing blobIds:\n%w", err)
 	}
 
+	fmt.Printf("Requesting missing objects: %d\n", len(missingFilesMap))
 	if err := receiveBlobs(missingFilesMap, reader); err != nil {
 		return "", fmt.Errorf("error receiving missing blobs:\n%w", err)
 	}

@@ -78,3 +78,13 @@ func (c *Commit) Md5Hash() string {
 	str := base32.StdEncoding.EncodeToString(hash[:])
 	return str
 }
+
+func (c *Commit) GetSetOfPaths() map[string]struct{} {
+	set := make(map[string]struct{}, len(c.fileMap))
+
+	for _, values := range c.fileMap {
+		set[values] = struct{}{}
+	}
+
+	return set
+}
