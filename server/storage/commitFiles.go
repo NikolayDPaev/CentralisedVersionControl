@@ -1,4 +1,4 @@
-package fileIO
+package storage
 
 import (
 	"errors"
@@ -8,8 +8,8 @@ import (
 	"os"
 	"sort"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/commit"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
 )
 
 func fileExists(filePath string) (bool, error) {
@@ -32,7 +32,7 @@ func extractCommitData(fileInfo fs.FileInfo) (string, error) { // !!!
 	defer file.Close()
 
 	comm := netIO.NewCommunicator(100, file, file)
-	message, creator, err := commit.ReadCommitData(comm)
+	message, creator, err := servercommit.ReadCommitData(comm)
 	if err != nil {
 		return "", err
 	}
@@ -75,7 +75,7 @@ func (s *FileStorage) OpenCommit(commitId string) (StorageEntry, error) {
 	return file, nil
 }
 
-func (s *FileStorage) SaveCommit(commit *commit.Commit) error {
+func (s *FileStorage) SaveCommit(commit *servercommit.Commit) error {
 	if err := os.MkdirAll("commits", 0777); err != nil {
 		return fmt.Errorf("cannot create commit folder:\n%w", err)
 	}

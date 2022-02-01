@@ -3,16 +3,16 @@ package clienthandler
 import (
 	"fmt"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/fileIO"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
 )
 
 type CommitList struct {
 	comm    netIO.Communicator
-	storage fileIO.Storage
+	storage storage.Storage
 }
 
-func NewCommitList(comm netIO.Communicator, storage fileIO.Storage) *CommitList {
+func NewCommitList(comm netIO.Communicator, storage storage.Storage) *CommitList {
 	return &CommitList{comm, storage}
 }
 

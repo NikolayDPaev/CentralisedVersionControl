@@ -6,9 +6,9 @@ import (
 	"net"
 	"sync"
 
+	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/clienthandler"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/fileIO"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
 )
 
 const CHUNK_SIZE = 4096
@@ -52,7 +52,7 @@ func (s *Server) sendEmptyRequest() error {
 
 func handleClient(c net.Conn, wg *sync.WaitGroup) {
 	comm := netIO.NewCommunicator(CHUNK_SIZE, c, c)
-	clientHandler, err := clienthandler.NewHandler(comm, &fileIO.FileStorage{})
+	clientHandler, err := clienthandler.NewHandler(comm, &storage.FileStorage{})
 	if err != nil {
 		log.Println(err)
 	}
@@ -63,14 +63,6 @@ func handleClient(c net.Conn, wg *sync.WaitGroup) {
 	c.Close()
 	wg.Done()
 }
-
-// func logUnwrappedError(err error) {
-// 	currentErr := err
-// 	for errors.Unwrap(currentErr) != nil {
-// 		currentErr = errors.Unwrap(currentErr)
-// 		log.Println(err)
-// 	}
-// }
 
 func (s *Server) runServer() {
 	l, err := net.Listen("tcp4", ":"+s.port)

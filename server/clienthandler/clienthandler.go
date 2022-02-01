@@ -3,8 +3,8 @@ package clienthandler
 import (
 	"fmt"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/fileIO"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
 )
 
 const (
@@ -18,7 +18,7 @@ type Clienthandler interface {
 	Handle() error
 }
 
-func NewHandler(comm netIO.Communicator, storage fileIO.Storage) (Clienthandler, error) {
+func NewHandler(comm netIO.Communicator, storage storage.Storage) (Clienthandler, error) {
 	opCode, err := comm.ReceiveVarInt()
 	if err != nil {
 		return nil, fmt.Errorf("could not receive opcode:\n%w", err)

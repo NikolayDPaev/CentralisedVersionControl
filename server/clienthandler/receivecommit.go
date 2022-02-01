@@ -3,21 +3,21 @@ package clienthandler
 import (
 	"fmt"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/commit"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/fileIO"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
 )
 
 type ReceiveCommit struct {
 	comm    netIO.Communicator
-	storage fileIO.Storage
+	storage storage.Storage
 }
 
-func NewReceiveCommit(comm netIO.Communicator, storage fileIO.Storage) *ReceiveCommit {
+func NewReceiveCommit(comm netIO.Communicator, storage storage.Storage) *ReceiveCommit {
 	return &ReceiveCommit{comm, storage}
 }
 
-func (r *ReceiveCommit) getMissingBlobIds(commit *commit.Commit) ([]string, error) {
+func (r *ReceiveCommit) getMissingBlobIds(commit *servercommit.Commit) ([]string, error) {
 	commitBlobIds := commit.ExtractBlobIds()
 	//missingBlobIds := make([]string, len(commitBlobIds)/2)
 	var missingBlobIds []string
@@ -54,7 +54,7 @@ func (r *ReceiveCommit) receiveCommit() error {
 		return fmt.Errorf("cannot read id of commit:\n%w", err)
 	}
 
-	commit, err := commit.ReadCommit(id, r.comm)
+	commit, err := servercommit.ReadCommit(id, r.comm)
 	if err != nil {
 		return fmt.Errorf("error receiving commit: %w", err)
 	}

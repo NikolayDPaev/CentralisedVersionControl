@@ -1,8 +1,8 @@
-package fileIO
+package storage
 
 import (
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/commit"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
 )
 
 type StorageEntry interface {
@@ -18,7 +18,7 @@ type Storage interface {
 	BlobSize(blobId string) (int64, error)
 	CommitList() []string
 	OpenCommit(commitId string) (StorageEntry, error)
-	SaveCommit(commit *commit.Commit) error
+	SaveCommit(commit *servercommit.Commit) error
 	CommitSize(commitId string) (int64, error)
 	CommitExists(commitId string) (bool, error)
 }

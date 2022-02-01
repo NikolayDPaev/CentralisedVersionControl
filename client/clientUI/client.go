@@ -9,14 +9,16 @@ import (
 	"os"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/commands"
-	"github.com/NikolayDPaev/CentralisedVersionControl/client/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
 )
 
 const (
+	OK              = 0
 	GET_COMMIT_LIST = 0
 	DOWNLOAD_COMMIT = 1
 	UPLOAD_COMMIT   = 2
 	EMPTY_REQUEST   = 3
+	CHUNK_SIZE      = 4096
 )
 
 var errInvalidCommand = errors.New("invalid command")
@@ -97,17 +99,14 @@ func commitList() error {
 	}
 	defer c.Close()
 
-	if err := netIO.SendVarInt(GET_COMMIT_LIST, c); err != nil {
-		return fmt.Errorf("cannot send opcode:\n%w", err)
-	}
-
-	commitList, err := commands.GetCommitList(c, c)
+	commitList := commands.NewCommitList(netIO.NewCommunicator(CHUNK_SIZE, c, c), GET_COMMIT_LIST)
+	slice, err := commitList.GetCommitList()
 	if err != nil {
 		return fmt.Errorf("cannot execute commit list operation:\n%w", err)
 	}
 
 	fmt.Println("Commits on server:")
-	for _, str := range commitList {
+	for _, str := range slice {
 		fmt.Println(str)
 	}
 
@@ -128,12 +127,9 @@ func downloadCommit(args []string) error {
 		return fmt.Errorf("error connecting to server:\n%w", err)
 	}
 	defer c.Close()
+	download := commands.NewDownload(netIO.NewCommunicator(CHUNK_SIZE, c, c), DOWNLOAD_COMMIT, OK)
 
-	if err := netIO.SendVarInt(DOWNLOAD_COMMIT, c); err != nil {
-		return fmt.Errorf("cannot send opcode:\n%w", err)
-	}
-
-	message, err := commands.DownloadCommit(args[1], c, c)
+	message, err := download.DownloadCommit(args[1])
 	if err != nil {
 		return fmt.Errorf("cannot execute download commit operation:\n%w", err)
 	}
@@ -152,17 +148,14 @@ func uploadCommit() error {
 		return fmt.Errorf("error connecting to server:\n%w", err)
 	}
 	defer c.Close()
-
-	if err := netIO.SendVarInt(UPLOAD_COMMIT, c); err != nil {
-		return fmt.Errorf("cannot send opcode:\n%w", err)
-	}
+	upload := commands.NewUpload(netIO.NewCommunicator(CHUNK_SIZE, c, c), UPLOAD_COMMIT)
 
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Enter commit message:")
 	scanner.Scan()
 	message := scanner.Text()
 
-	err = commands.UploadCommit(message, metafile.Username, c, c)
+	err = upload.UploadCommit(message, metafile.Username)
 	if err != nil {
 		return fmt.Errorf("error uploading commit:\n%w", err)
 	}

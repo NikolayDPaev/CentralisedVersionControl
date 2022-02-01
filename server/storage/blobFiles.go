@@ -1,10 +1,10 @@
-package fileIO
+package storage
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
 )
 
 func blobPath(blobId string) (string, error) {

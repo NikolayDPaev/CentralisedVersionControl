@@ -1,15 +1,14 @@
-package commit
+package clientcommit
 
 import (
 	"crypto/md5"
 	"encoding/base32"
 	"errors"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileIO"
-	"github.com/NikolayDPaev/CentralisedVersionControl/client/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
 )
 
 type Commit struct {
@@ -38,18 +37,18 @@ func getTree(fileMap map[string]string) string {
 	return str
 }
 
-func (c *Commit) Send(writer io.Writer) error {
-	err := netIO.SendString(c.message, writer)
+func (c *Commit) Send(comm netIO.Communicator) error {
+	err := comm.SendString(c.message)
 	if err != nil {
 		return fmt.Errorf("cannot send commit message:\n%w", err)
 	}
 
-	err = netIO.SendString(c.creator, writer)
+	err = comm.SendString(c.creator)
 	if err != nil {
 		return fmt.Errorf("cannot send commit creator:\n%w", err)
 	}
 
-	err = netIO.SendString(getTree(c.fileMap), writer)
+	err = comm.SendString(getTree(c.fileMap))
 	if err != nil {
 		return fmt.Errorf("error sending commit tree:\n%w", err)
 	}

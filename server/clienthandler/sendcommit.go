@@ -3,9 +3,9 @@ package clienthandler
 import (
 	"fmt"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/commit"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/fileIO"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
 )
 
 const (
@@ -15,10 +15,10 @@ const (
 
 type SendCommit struct {
 	comm    netIO.Communicator
-	storage fileIO.Storage
+	storage storage.Storage
 }
 
-func NewSendCommit(comm netIO.Communicator, storage fileIO.Storage) *ReceiveCommit {
+func NewSendCommit(comm netIO.Communicator, storage storage.Storage) *ReceiveCommit {
 	return &ReceiveCommit{comm, storage}
 }
 
@@ -29,7 +29,7 @@ func (s *SendCommit) sendCommitData(commitId string) error {
 	}
 	defer commitFile.Close()
 
-	commit, err := commit.ReadCommit(commitId, s.comm)
+	commit, err := servercommit.ReadCommit(commitId, s.comm)
 	if err != nil {
 		return fmt.Errorf("error reading commit file %s: %s", commitId, err)
 	}

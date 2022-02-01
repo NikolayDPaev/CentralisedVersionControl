@@ -1,10 +1,10 @@
-package commit
+package servercommit
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
 )
 
 type Commit struct {

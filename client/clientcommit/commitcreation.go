@@ -1,22 +1,21 @@
-package commit
+package clientcommit
 
 import (
 	"errors"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileIO"
-	"github.com/NikolayDPaev/CentralisedVersionControl/client/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
 )
 
-func readMetadata(reader io.Reader) (string, string, error) {
-	message, err := netIO.ReceiveString(reader)
+func readMetadata(comm netIO.Communicator) (string, string, error) {
+	message, err := comm.ReceiveString()
 	if err != nil {
 		return "", "", err
 	}
 
-	creator, err := netIO.ReceiveString(reader)
+	creator, err := comm.ReceiveString()
 	if err != nil {
 		return "", "", err
 	}
@@ -40,13 +39,13 @@ func getMap(tree string) (map[string]string, error) {
 	return fileMap, nil
 }
 
-func ReadCommit(id string, reader io.Reader) (*Commit, error) {
-	message, creator, err := readMetadata(reader)
+func ReadCommit(id string, comm netIO.Communicator) (*Commit, error) {
+	message, creator, err := readMetadata(comm)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read metadata of commit:\n%w", err)
 	}
 
-	strTree, err := netIO.ReceiveString(reader)
+	strTree, err := comm.ReceiveString()
 	if err != nil {
 		return nil, fmt.Errorf("cannot read tree string of commit:\n%w", err)
 	}
