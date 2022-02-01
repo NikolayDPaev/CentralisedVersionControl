@@ -6,7 +6,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/clienthandler"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
 )
@@ -14,12 +14,13 @@ import (
 const CHUNK_SIZE = 4096
 
 type Server struct {
-	port    string
-	wg      sync.WaitGroup
-	running bool
+	netInterface string
+	port         string
+	wg           sync.WaitGroup
+	running      bool
 }
 
-func NewServer(port string) *Server {
+func NewServer(netInterface, port string) *Server {
 	return &Server{port: port, running: false}
 }
 
@@ -43,7 +44,7 @@ func (s *Server) sendEmptyRequest() error {
 	}
 	defer c.Close()
 
-	comm := netIO.NewCommunicator(CHUNK_SIZE, c, c)
+	comm := netio.NewCommunicator(CHUNK_SIZE, c, c)
 	if err := comm.SendVarInt(clienthandler.EMPTY_REQUEST); err != nil {
 		return fmt.Errorf("error sending empty request:\n%w", err)
 	}
@@ -51,7 +52,7 @@ func (s *Server) sendEmptyRequest() error {
 }
 
 func handleClient(c net.Conn, wg *sync.WaitGroup) {
-	comm := netIO.NewCommunicator(CHUNK_SIZE, c, c)
+	comm := netio.NewCommunicator(CHUNK_SIZE, c, c)
 	clientHandler, err := clienthandler.NewHandler(comm, &storage.FileStorage{})
 	if err != nil {
 		log.Println(err)
@@ -65,7 +66,7 @@ func handleClient(c net.Conn, wg *sync.WaitGroup) {
 }
 
 func (s *Server) runServer() {
-	l, err := net.Listen("tcp4", ":"+s.port)
+	l, err := net.Listen("tcp4", s.netInterface+":"+s.port)
 	if err != nil {
 		log.Println(err)
 		return

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileIO"
-	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileio"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
-func readMetadata(comm netIO.Communicator) (string, string, error) {
+func readMetadata(comm netio.Communicator) (string, string, error) {
 	message, err := comm.ReceiveString()
 	if err != nil {
 		return "", "", err
@@ -39,7 +39,7 @@ func getMap(tree string) (map[string]string, error) {
 	return fileMap, nil
 }
 
-func ReadCommit(id string, comm netIO.Communicator) (*Commit, error) {
+func ReadCommit(id string, comm netio.Communicator) (*Commit, error) {
 	message, creator, err := readMetadata(comm)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read metadata of commit:\n%w", err)
@@ -63,14 +63,14 @@ func ReadCommit(id string, comm netIO.Communicator) (*Commit, error) {
 }
 
 func CreateCommit(message, creator string) (*Commit, error) {
-	paths, err := fileIO.GetPathsOfAllFiles()
+	paths, err := fileio.GetPathsOfAllFiles()
 	if err != nil {
 		return nil, fmt.Errorf("error getting filenames for creating commit:\n%w", err)
 	}
 
 	fileMap := make(map[string]string, len(paths))
 	for _, path := range paths {
-		hash, err := fileIO.GetHashOfFile(path)
+		hash, err := fileio.GetHashOfFile(path)
 		if err != nil {
 			return nil, err
 		}

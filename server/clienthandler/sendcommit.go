@@ -3,7 +3,7 @@ package clienthandler
 import (
 	"fmt"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
 )
@@ -14,11 +14,11 @@ const (
 )
 
 type SendCommit struct {
-	comm    netIO.Communicator
+	comm    netio.Communicator
 	storage storage.Storage
 }
 
-func NewSendCommit(comm netIO.Communicator, storage storage.Storage) *ReceiveCommit {
+func NewSendCommit(comm netio.Communicator, storage storage.Storage) *ReceiveCommit {
 	return &ReceiveCommit{comm, storage}
 }
 
@@ -44,22 +44,22 @@ func (s *SendCommit) sendCommitData(commitId string) error {
 func (s *SendCommit) sendBlob(blobId string) error {
 	file, err := s.storage.OpenBlob(blobId)
 	if err != nil {
-		return fmt.Errorf("error opening blob %s:\n%w", blobId, err)
+		return fmt.Errorf("error opening blob %s: %w", blobId, err)
 	}
 	defer file.Close()
 
 	if err := s.comm.SendString(blobId); err != nil {
-		return fmt.Errorf("error sending blobId %s:\n%w", blobId, err)
+		return fmt.Errorf("error sending blobId %s: %w", blobId, err)
 	}
 
 	size, err := s.storage.BlobSize(blobId)
 	if err != nil {
-		return fmt.Errorf("error getting blob %s size:\n%w", blobId, err)
+		return fmt.Errorf("error getting blob %s size: %w", blobId, err)
 	}
 
 	err = s.comm.SendFileData(file, size)
 	if err != nil {
-		return fmt.Errorf("error sending blob %s:\n%w", blobId, err)
+		return fmt.Errorf("error sending blob %s: %w", blobId, err)
 	}
 
 	return nil
@@ -88,12 +88,12 @@ func (s *SendCommit) validateCommitId(commitId string) (bool, error) {
 func (s *SendCommit) sendCommit() error {
 	commitId, err := s.comm.ReceiveString()
 	if err != nil {
-		return fmt.Errorf("error reading commit id:\n%w", err)
+		return fmt.Errorf("error reading commit id: %w", err)
 	}
 
 	validId, err := s.validateCommitId(commitId)
 	if err != nil {
-		return fmt.Errorf("error validating commit id:\n%w", err)
+		return fmt.Errorf("error validating commit id: %w", err)
 	}
 	if !validId {
 		return nil
@@ -106,7 +106,7 @@ func (s *SendCommit) sendCommit() error {
 
 	blobIdsForSend, err := s.comm.ReceiveStringSlice()
 	if err != nil {
-		return fmt.Errorf("error getting blob ids for send:\n%w", err)
+		return fmt.Errorf("error getting blob ids for send: %w", err)
 	}
 
 	for _, blobId := range blobIdsForSend { // send the requested number of blobs

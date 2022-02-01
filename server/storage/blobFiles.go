@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
 func blobPath(blobId string) (string, error) {
@@ -26,7 +26,7 @@ func (s *FileStorage) OpenBlob(blobId string) (StorageEntry, error) {
 	return file, nil
 }
 
-func (s *FileStorage) SaveBlob(blobId string, comm netIO.Communicator) error {
+func (s *FileStorage) SaveBlob(blobId string, comm netio.Communicator) error {
 	path, err := blobPath(blobId)
 	if err != nil {
 		return err

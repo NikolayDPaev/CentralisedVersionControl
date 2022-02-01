@@ -4,8 +4,8 @@ import (
 	"io"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/commit"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/fileIO"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/netio"
 )
 
 type communicatorDefMock struct{}
@@ -37,10 +37,10 @@ func (c *communicatorDefMock) ReceiveFileData(fileWriter io.Writer) error {
 
 type storageDefMock struct{}
 
-func (s *storageDefMock) OpenBlob(blobId string) (fileIO.StorageEntry, error) {
+func (s *storageDefMock) OpenBlob(blobId string) (storage.StorageEntry, error) {
 	return nil, nil
 }
-func (s *storageDefMock) SaveBlob(blobId string, comm netIO.Communicator) error {
+func (s *storageDefMock) SaveBlob(blobId string, comm netio.Communicator) error {
 	return nil
 }
 func (s *storageDefMock) BlobExists(blobId string) (bool, error) {
@@ -52,7 +52,7 @@ func (s *storageDefMock) BlobSize(blobId string) (int64, error) {
 func (s *storageDefMock) CommitList() []string {
 	return nil
 }
-func (s *storageDefMock) OpenCommit(commitId string) (fileIO.StorageEntry, error) {
+func (s *storageDefMock) OpenCommit(commitId string) (storage.StorageEntry, error) {
 	return nil, nil
 }
 func (s *storageDefMock) SaveCommit(commit *commit.Commit) error {

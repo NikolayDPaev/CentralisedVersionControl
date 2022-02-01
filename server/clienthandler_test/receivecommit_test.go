@@ -4,9 +4,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/clienthandler"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/commit"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
 )
 
 type receivedData struct {
@@ -53,7 +53,7 @@ func (s *receiveCommitStorageMock) BlobExists(blobId string) (bool, error) {
 	return true, nil
 }
 
-func (s *receiveCommitStorageMock) SaveBlob(blobId string, comm netIO.Communicator) error {
+func (s *receiveCommitStorageMock) SaveBlob(blobId string, comm netio.Communicator) error {
 	for _, v := range s.wantedMissingBlobs {
 		if blobId == v {
 			return nil

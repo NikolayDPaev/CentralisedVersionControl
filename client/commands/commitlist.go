@@ -3,15 +3,15 @@ package commands
 import (
 	"fmt"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
 type Commitlist struct {
-	comm   netIO.Communicator
+	comm   netio.Communicator
 	opcode int
 }
 
-func NewCommitList(comm netIO.Communicator, opcode int) *Commitlist {
+func NewCommitList(comm netio.Communicator, opcode int) *Commitlist {
 	return &Commitlist{comm, opcode}
 }
 

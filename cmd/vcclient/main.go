@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/client/clientUI"
+	"github.com/NikolayDPaev/CentralisedVersionControl/client/client"
 )
 
 func main() {
-	clientUI.ReadArgs(os.Args[1:])
+	client.ReadArgs(os.Args[1:])
 }

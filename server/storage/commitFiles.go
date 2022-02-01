@@ -8,7 +8,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
 )
 
@@ -31,7 +31,7 @@ func extractCommitData(fileInfo fs.FileInfo) (string, error) { // !!!
 	}
 	defer file.Close()
 
-	comm := netIO.NewCommunicator(100, file, file)
+	comm := netio.NewCommunicator(100, file, file)
 	message, creator, err := servercommit.ReadCommitData(comm)
 	if err != nil {
 		return "", err
@@ -86,7 +86,7 @@ func (s *FileStorage) SaveCommit(commit *servercommit.Commit) error {
 	}
 	defer file.Close()
 
-	comm := netIO.NewCommunicator(100, file, file)
+	comm := netio.NewCommunicator(100, file, file)
 	if err := commit.Write(comm); err != nil {
 		return fmt.Errorf("error saving commit %s: %w", commit.String(), err)
 	}

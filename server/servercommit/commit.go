@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
 type Commit struct {
@@ -18,7 +18,7 @@ func NewCommit(id, message, creator, tree string) *Commit {
 	return &Commit{id, message, creator, tree}
 }
 
-func ReadCommitData(comm netIO.Communicator) (string, string, error) {
+func ReadCommitData(comm netio.Communicator) (string, string, error) {
 	message, err := comm.ReceiveString()
 	if err != nil {
 		return "", "", err
@@ -31,7 +31,7 @@ func ReadCommitData(comm netIO.Communicator) (string, string, error) {
 	return message, creator, nil
 }
 
-func ReadCommit(id string, comm netIO.Communicator) (*Commit, error) {
+func ReadCommit(id string, comm netio.Communicator) (*Commit, error) {
 	message, creator, err := ReadCommitData(comm)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read metadata of commit:\n%w", err)
@@ -49,7 +49,7 @@ func (c *Commit) Id() string {
 	return c.id
 }
 
-func (c *Commit) Write(comm netIO.Communicator) error {
+func (c *Commit) Write(comm netio.Communicator) error {
 	err := comm.SendString(c.message)
 	if err != nil {
 		return fmt.Errorf("cannot send commit message:\n%w", err)

@@ -1,16 +1,16 @@
-package netIO_test
+package netio_test
 
 import (
 	"bytes"
 	"reflect"
 	"testing"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
 func TestSendVarInt(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netIO.NewCommunicator(100, b, b)
+	c := netio.NewCommunicator(100, b, b)
 
 	values := []int64{
 		1,
@@ -34,7 +34,7 @@ func TestSendVarInt(t *testing.T) {
 
 func TestSendString(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netIO.NewCommunicator(100, b, b)
+	c := netio.NewCommunicator(100, b, b)
 
 	values := []string{
 		"",
@@ -58,7 +58,7 @@ func TestSendString(t *testing.T) {
 
 func TestReceiveString(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netIO.NewCommunicator(100, b, b)
+	c := netio.NewCommunicator(100, b, b)
 
 	values := []string{
 		"",
@@ -81,7 +81,7 @@ func TestReceiveString(t *testing.T) {
 
 func TestSendStringSlice(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netIO.NewCommunicator(100, b, b)
+	c := netio.NewCommunicator(100, b, b)
 
 	values := [][]string{
 		{},
@@ -106,7 +106,7 @@ func TestSendStringSlice(t *testing.T) {
 
 func TestReceiveStringSlice(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netIO.NewCommunicator(100, b, b)
+	c := netio.NewCommunicator(100, b, b)
 
 	values := [][]string{
 		{},
@@ -129,7 +129,7 @@ func TestReceiveStringSlice(t *testing.T) {
 
 func TestSendFileData(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netIO.NewCommunicator(5, b, b)
+	c := netio.NewCommunicator(5, b, b)
 
 	values := [][]byte{
 		[]byte(""),
@@ -155,7 +155,7 @@ func TestSendFileData(t *testing.T) {
 
 func TestReceiveFileData(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netIO.NewCommunicator(5, b, b)
+	c := netio.NewCommunicator(5, b, b)
 
 	values := [][]byte{
 		[]byte(""),

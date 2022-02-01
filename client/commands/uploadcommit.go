@@ -4,16 +4,16 @@ import (
 	"fmt"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/clientcommit"
-	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileIO"
-	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileio"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
 type Upload struct {
-	comm   netIO.Communicator
+	comm   netio.Communicator
 	opcode int
 }
 
-func NewUpload(comm netIO.Communicator, opcode int) *Upload {
+func NewUpload(comm netio.Communicator, opcode int) *Upload {
 	return &Upload{comm, opcode}
 }
 
@@ -31,7 +31,7 @@ func (u *Upload) sendCommit(commit *clientcommit.Commit) error {
 }
 
 func (u *Upload) sendCompressedBlob(filePath string) error {
-	tmpFile, err := fileIO.CompressToTempFile(filePath)
+	tmpFile, err := fileio.CompressToTempFile(filePath)
 	if err != nil {
 		return fmt.Errorf("error compressing file %s:\n%w", filePath, err)
 	}

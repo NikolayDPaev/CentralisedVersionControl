@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"errors"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileio"
 )
 
 type MetafileData struct {
@@ -15,7 +15,7 @@ type MetafileData struct {
 var ErrMissingMetafile = errors.New("cannot open .cvc file")
 
 func ReadMetafileData() (*MetafileData, error) {
-	file, err := fileIO.OpenMetaFile()
+	file, err := fileio.OpenMetaFile()
 	if err != nil {
 		return nil, ErrMissingMetafile
 	}
@@ -35,7 +35,7 @@ func ReadMetafileData() (*MetafileData, error) {
 }
 
 func (m *MetafileData) Save() error {
-	file, err := fileIO.NewMetaFile()
+	file, err := fileio.NewMetaFile()
 	if err != nil {
 		return err
 	}

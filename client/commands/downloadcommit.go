@@ -6,19 +6,19 @@ import (
 	"os"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/clientcommit"
-	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileIO"
-	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileio"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
 var errInvalidCommitId = errors.New("invalid commit ID")
 
 type Download struct {
-	comm   netIO.Communicator
+	comm   netio.Communicator
 	opcode int
 	okcode int
 }
 
-func NewDownload(comm netIO.Communicator, opcode, okcode int) *Download {
+func NewDownload(comm netio.Communicator, opcode, okcode int) *Download {
 	return &Download{comm, opcode, okcode}
 }
 
@@ -61,7 +61,7 @@ func (d *Download) receiveBlob(missingFilesMap map[string]string) error {
 		return fmt.Errorf("error receiving blob:\n%w", err)
 	}
 
-	if err := fileIO.DecompressFile(fileName, tmp); err != nil {
+	if err := fileio.DecompressFile(fileName, tmp); err != nil {
 		return fmt.Errorf("error decompressing blob:\n%w", err)
 	}
 	return nil

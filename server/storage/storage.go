@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
 )
 
@@ -13,7 +13,7 @@ type StorageEntry interface {
 
 type Storage interface {
 	OpenBlob(blobId string) (StorageEntry, error)
-	SaveBlob(blobId string, comm netIO.Communicator) error
+	SaveBlob(blobId string, comm netio.Communicator) error
 	BlobExists(blobId string) (bool, error)
 	BlobSize(blobId string) (int64, error)
 	CommitList() []string

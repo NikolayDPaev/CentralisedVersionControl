@@ -1,4 +1,4 @@
-package netIO
+package netio
 
 import (
 	"encoding/binary"

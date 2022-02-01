@@ -3,17 +3,17 @@ package clienthandler
 import (
 	"fmt"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/netIO"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
 )
 
 type ReceiveCommit struct {
-	comm    netIO.Communicator
+	comm    netio.Communicator
 	storage storage.Storage
 }
 
-func NewReceiveCommit(comm netIO.Communicator, storage storage.Storage) *ReceiveCommit {
+func NewReceiveCommit(comm netio.Communicator, storage storage.Storage) *ReceiveCommit {
 	return &ReceiveCommit{comm, storage}
 }
 
@@ -25,7 +25,7 @@ func (r *ReceiveCommit) getMissingBlobIds(commit *servercommit.Commit) ([]string
 	for _, blobId := range commitBlobIds {
 		exists, err := r.storage.BlobExists(blobId)
 		if err != nil {
-			return nil, fmt.Errorf("cannot check existence of blob %s:\n%w", blobId, err)
+			return nil, fmt.Errorf("cannot check existence of blob %s: %w", blobId, err)
 		}
 
 		if !exists {
@@ -38,11 +38,11 @@ func (r *ReceiveCommit) getMissingBlobIds(commit *servercommit.Commit) ([]string
 func (r *ReceiveCommit) receiveBlob() error {
 	blobId, err := r.comm.ReceiveString()
 	if err != nil {
-		return fmt.Errorf("error receiving blobId:\n%w", err)
+		return fmt.Errorf("error receiving blobId: %w", err)
 	}
 	err = r.storage.SaveBlob(blobId, r.comm)
 	if err != nil {
-		return fmt.Errorf("error creating blob:\n%w", err)
+		return fmt.Errorf("error creating blob: %w", err)
 	}
 
 	return nil
@@ -51,7 +51,7 @@ func (r *ReceiveCommit) receiveBlob() error {
 func (r *ReceiveCommit) receiveCommit() error {
 	id, err := r.comm.ReceiveString()
 	if err != nil {
-		return fmt.Errorf("cannot read id of commit:\n%w", err)
+		return fmt.Errorf("cannot read id of commit: %w", err)
 	}
 
 	commit, err := servercommit.ReadCommit(id, r.comm)

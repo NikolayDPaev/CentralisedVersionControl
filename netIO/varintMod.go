@@ -1,4 +1,4 @@
-package netIO
+package netio
 
 // Modified code from the binary package
 // the function modified is ReadUvarint, it was made to work with io.Reader instead of io.ByteReader
