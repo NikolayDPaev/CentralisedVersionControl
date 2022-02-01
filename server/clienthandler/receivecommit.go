@@ -36,7 +36,7 @@ func (r *ReceiveCommit) getMissingBlobIds(commit *servercommit.Commit) ([]string
 }
 
 func (r *ReceiveCommit) receiveBlob() error {
-	blobId, err := r.comm.ReceiveString()
+	blobId, err := r.comm.RecvString()
 	if err != nil {
 		return fmt.Errorf("error receiving blobId: %w", err)
 	}
@@ -49,7 +49,7 @@ func (r *ReceiveCommit) receiveBlob() error {
 }
 
 func (r *ReceiveCommit) receiveCommit() error {
-	id, err := r.comm.ReceiveString()
+	id, err := r.comm.RecvString()
 	if err != nil {
 		return fmt.Errorf("cannot read id of commit: %w", err)
 	}

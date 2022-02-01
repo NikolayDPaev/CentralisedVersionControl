@@ -24,10 +24,10 @@ func TestSendVarInt(t *testing.T) {
 	for _, input := range values {
 		err1 := c.SendVarInt(input)
 
-		result, err2 := c.ReceiveVarInt()
+		result, err2 := c.RecvVarInt()
 
 		if input != result || err1 != nil || err2 != nil {
-			t.Errorf("Send and receive var int failed: expected %d, result is %d", input, result)
+			t.Errorf("Send and recv var int failed: expected %d, result is %d", input, result)
 		}
 	}
 }
@@ -45,7 +45,7 @@ func TestSendString(t *testing.T) {
 	for _, testCase := range values {
 		err1 := c.SendString(testCase)
 
-		resultLen, err2 := c.ReceiveVarInt()
+		resultLen, err2 := c.RecvVarInt()
 		resultBuf := make([]byte, resultLen)
 		b.Read(resultBuf)
 
@@ -56,7 +56,7 @@ func TestSendString(t *testing.T) {
 	}
 }
 
-func TestReceiveString(t *testing.T) {
+func TestRecvString(t *testing.T) {
 	b := new(bytes.Buffer)
 	c := netio.NewCommunicator(100, b, b)
 
@@ -70,11 +70,11 @@ func TestReceiveString(t *testing.T) {
 		err1 := c.SendVarInt(int64(len(testCase)))
 		b.Write([]byte(testCase))
 
-		result, err2 := c.ReceiveString()
+		result, err2 := c.RecvString()
 
 		if len(testCase) != len(result) || testCase != result ||
 			err1 != nil || err2 != nil {
-			t.Errorf("Receive string failed: expected %s, result is %s", testCase, result)
+			t.Errorf("Recv string failed: expected %s, result is %s", testCase, result)
 		}
 	}
 }
@@ -91,10 +91,10 @@ func TestSendStringSlice(t *testing.T) {
 	for _, testCase := range values {
 		err1 := c.SendStringSlice(testCase)
 
-		sliceLen, err := c.ReceiveVarInt()
+		sliceLen, err := c.RecvVarInt()
 		resultSlice := make([]string, sliceLen)
 		for i := 0; i < int(sliceLen) && err == nil; i++ {
-			resultSlice[i], err = c.ReceiveString()
+			resultSlice[i], err = c.RecvString()
 		}
 
 		if int(sliceLen) != len(testCase) || !reflect.DeepEqual(testCase, resultSlice) ||
@@ -104,7 +104,7 @@ func TestSendStringSlice(t *testing.T) {
 	}
 }
 
-func TestReceiveStringSlice(t *testing.T) {
+func TestRecvStringSlice(t *testing.T) {
 	b := new(bytes.Buffer)
 	c := netio.NewCommunicator(100, b, b)
 
@@ -119,7 +119,7 @@ func TestReceiveStringSlice(t *testing.T) {
 			err = c.SendString(testCase[i])
 		}
 
-		slice, err1 := c.ReceiveStringSlice()
+		slice, err1 := c.RecvStringSlice()
 		if len(slice) != len(testCase) || !reflect.DeepEqual(testCase, slice) ||
 			err != nil || err1 != nil {
 			t.Errorf("Send string slice failed: expected %s, result is %s", testCase, slice)
@@ -142,18 +142,18 @@ func TestSendFileData(t *testing.T) {
 
 		err := c.SendFileData(input, int64(len(testCase)))
 
-		receivedLen, err1 := c.ReceiveVarInt()
-		bytes := make([]byte, receivedLen)
+		recvdLen, err1 := c.RecvVarInt()
+		bytes := make([]byte, recvdLen)
 		b.Read(bytes)
 
-		if int(receivedLen) != len(testCase) || !reflect.DeepEqual(testCase, bytes) ||
+		if int(recvdLen) != len(testCase) || !reflect.DeepEqual(testCase, bytes) ||
 			err != nil || err1 != nil {
 			t.Errorf("Send file data failed: expected %s, result is %s", testCase, string(bytes))
 		}
 	}
 }
 
-func TestReceiveFileData(t *testing.T) {
+func TestRecvFileData(t *testing.T) {
 	b := new(bytes.Buffer)
 	c := netio.NewCommunicator(5, b, b)
 
@@ -167,7 +167,7 @@ func TestReceiveFileData(t *testing.T) {
 		b.Write(testCase)
 
 		output := new(bytes.Buffer)
-		err := c.ReceiveFileData(output)
+		err := c.RecvFileData(output)
 
 		bytes := make([]byte, len(testCase))
 		output.Read(bytes)

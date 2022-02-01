@@ -82,7 +82,7 @@ func (u *Upload) UploadCommit(message, username string) error {
 	}
 
 	fmt.Println("Receiving missing blob IDs from server")
-	missingBlobIds, err := u.comm.ReceiveStringSlice()
+	missingBlobIds, err := u.comm.RecvStringSlice()
 	if err != nil {
 		return fmt.Errorf("error receiving missing blobIds:\n%w", err)
 	}

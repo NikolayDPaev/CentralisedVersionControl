@@ -25,7 +25,7 @@ func (c *Commitlist) GetCommitList() ([]string, error) {
 		return nil, fmt.Errorf("cannot send op code:\n%w", err)
 	}
 
-	commitList, err := c.comm.ReceiveStringSlice()
+	commitList, err := c.comm.RecvStringSlice()
 	if err != nil {
 		return nil, fmt.Errorf("error receiving commit list:\n%w", err)
 	}

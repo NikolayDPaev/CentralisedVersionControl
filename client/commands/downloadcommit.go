@@ -27,7 +27,7 @@ func (d *Download) receiveCommit(commitId string) (*clientcommit.Commit, error) 
 		return nil, fmt.Errorf("error sending commit ID:\n%w", err)
 	}
 
-	code, err := d.comm.ReceiveVarInt()
+	code, err := d.comm.RecvVarInt()
 	if err != nil {
 		return nil, fmt.Errorf("error no such commit on server:\n%w", err)
 	}
@@ -45,7 +45,7 @@ func (d *Download) receiveCommit(commitId string) (*clientcommit.Commit, error) 
 }
 
 func (d *Download) receiveBlob(missingFilesMap map[string]string) error {
-	blobId, err := d.comm.ReceiveString()
+	blobId, err := d.comm.RecvString()
 	if err != nil {
 		return fmt.Errorf("error receiving blobId:\n%w", err)
 	}
@@ -57,7 +57,7 @@ func (d *Download) receiveBlob(missingFilesMap map[string]string) error {
 	}
 	defer tmp.Close()
 
-	if err := d.comm.ReceiveFileData(tmp); err != nil {
+	if err := d.comm.RecvFileData(tmp); err != nil {
 		return fmt.Errorf("error receiving blob:\n%w", err)
 	}
 

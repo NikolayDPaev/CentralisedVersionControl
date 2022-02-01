@@ -19,12 +19,12 @@ func NewCommit(id, message, creator, tree string) *Commit {
 }
 
 func ReadCommitData(comm netio.Communicator) (string, string, error) {
-	message, err := comm.ReceiveString()
+	message, err := comm.RecvString()
 	if err != nil {
 		return "", "", err
 	}
 
-	creator, err := comm.ReceiveString()
+	creator, err := comm.RecvString()
 	if err != nil {
 		return "", "", err
 	}
@@ -37,7 +37,7 @@ func ReadCommit(id string, comm netio.Communicator) (*Commit, error) {
 		return nil, fmt.Errorf("cannot read metadata of commit:\n%w", err)
 	}
 
-	tree, err := comm.ReceiveString()
+	tree, err := comm.RecvString()
 	if err != nil {
 		return nil, fmt.Errorf("cannot read tree string of commit:\n%w", err)
 	}

@@ -19,7 +19,7 @@ type Clienthandler interface {
 }
 
 func NewHandler(comm netio.Communicator, storage storage.Storage) (Clienthandler, error) {
-	opCode, err := comm.ReceiveVarInt()
+	opCode, err := comm.RecvVarInt()
 	if err != nil {
 		return nil, fmt.Errorf("could not receive opcode: %w", err)
 	}

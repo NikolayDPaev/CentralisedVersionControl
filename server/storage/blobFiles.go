@@ -42,7 +42,7 @@ func (s *FileStorage) SaveBlob(blobId string, comm netio.Communicator) error {
 	}
 	defer file.Close()
 
-	err = comm.ReceiveFileData(file)
+	err = comm.RecvFileData(file)
 	if err != nil {
 		return err
 	}

@@ -86,7 +86,7 @@ func (s *SendCommit) validateCommitId(commitId string) (bool, error) {
 }
 
 func (s *SendCommit) sendCommit() error {
-	commitId, err := s.comm.ReceiveString()
+	commitId, err := s.comm.RecvString()
 	if err != nil {
 		return fmt.Errorf("error reading commit id: %w", err)
 	}
@@ -104,7 +104,7 @@ func (s *SendCommit) sendCommit() error {
 		return err
 	}
 
-	blobIdsForSend, err := s.comm.ReceiveStringSlice()
+	blobIdsForSend, err := s.comm.RecvStringSlice()
 	if err != nil {
 		return fmt.Errorf("error getting blob ids for send: %w", err)
 	}

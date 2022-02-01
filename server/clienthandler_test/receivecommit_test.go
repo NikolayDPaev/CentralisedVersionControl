@@ -6,7 +6,7 @@ import (
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/clienthandler"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/commit"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
 )
 
 type receivedData struct {
@@ -63,8 +63,8 @@ func (s *receiveCommitStorageMock) SaveBlob(blobId string, comm netio.Communicat
 	return nil
 }
 
-func (s *receiveCommitStorageMock) SaveCommit(receivedCommit *commit.Commit) error {
-	wantedCommit := commit.NewCommit(s.stringsToReceive[0],
+func (s *receiveCommitStorageMock) SaveCommit(receivedCommit *servercommit.Commit) error {
+	wantedCommit := servercommit.NewCommit(s.stringsToReceive[0],
 		s.stringsToReceive[1],
 		s.stringsToReceive[2],
 		s.stringsToReceive[3])

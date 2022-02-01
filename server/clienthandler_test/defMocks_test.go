@@ -3,9 +3,9 @@ package clienthandler_test
 import (
 	"io"
 
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/commit"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/netio"
 )
 
 type communicatorDefMock struct{}
@@ -13,25 +13,25 @@ type communicatorDefMock struct{}
 func (c *communicatorDefMock) SendVarInt(num int64) error {
 	return nil
 }
-func (c *communicatorDefMock) ReceiveVarInt() (int64, error) {
+func (c *communicatorDefMock) RecvVarInt() (int64, error) {
 	return 0, nil
 }
 func (c *communicatorDefMock) SendString(str string) error {
 	return nil
 }
-func (c *communicatorDefMock) ReceiveString() (string, error) {
+func (c *communicatorDefMock) RecvString() (string, error) {
 	return "", nil
 }
 func (c *communicatorDefMock) SendStringSlice(slice []string) error {
 	return nil
 }
-func (c *communicatorDefMock) ReceiveStringSlice() ([]string, error) {
+func (c *communicatorDefMock) RecvStringSlice() ([]string, error) {
 	return nil, nil
 }
 func (c *communicatorDefMock) SendFileData(fileReader io.Reader, fileLength int64) error {
 	return nil
 }
-func (c *communicatorDefMock) ReceiveFileData(fileWriter io.Writer) error {
+func (c *communicatorDefMock) RecvFileData(fileWriter io.Writer) error {
 	return nil
 }
 
@@ -55,7 +55,7 @@ func (s *storageDefMock) CommitList() []string {
 func (s *storageDefMock) OpenCommit(commitId string) (storage.StorageEntry, error) {
 	return nil, nil
 }
-func (s *storageDefMock) SaveCommit(commit *commit.Commit) error {
+func (s *storageDefMock) SaveCommit(commit *servercommit.Commit) error {
 	return nil
 }
 func (s *storageDefMock) CommitSize(commitId string) (int64, error) {

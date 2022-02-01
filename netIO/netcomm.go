@@ -39,7 +39,7 @@ func (c *NetCommunication) SendVarInt(num int64) error {
 	return nil
 }
 
-func (c *NetCommunication) ReceiveVarInt() (int64, error) {
+func (c *NetCommunication) RecvVarInt() (int64, error) {
 	num, err := ReadVarint(c.reader)
 	if err != nil {
 		return 0, fmt.Errorf("error reading var int:\n%w", err)
@@ -59,10 +59,10 @@ func (c *NetCommunication) SendString(str string) error {
 	return nil
 }
 
-func (c *NetCommunication) ReceiveString() (string, error) {
-	len, err := c.ReceiveVarInt()
+func (c *NetCommunication) RecvString() (string, error) {
+	len, err := c.RecvVarInt()
 	if err != nil {
-		return "", fmt.Errorf("could not receive length of string:\n%w", err)
+		return "", fmt.Errorf("could not recv length of string:\n%w", err)
 	}
 
 	bytes := make([]byte, len)
@@ -72,7 +72,7 @@ func (c *NetCommunication) ReceiveString() (string, error) {
 		return "", errors.New("length does not match")
 	}
 	if err != nil {
-		return "", fmt.Errorf("could not receive string:\n%w", err)
+		return "", fmt.Errorf("could not recv string:\n%w", err)
 	}
 
 	return string(bytes), nil
@@ -91,15 +91,15 @@ func (c *NetCommunication) SendStringSlice(slice []string) error {
 	return nil
 }
 
-func (c *NetCommunication) ReceiveStringSlice() ([]string, error) {
-	len, err := c.ReceiveVarInt()
+func (c *NetCommunication) RecvStringSlice() ([]string, error) {
+	len, err := c.RecvVarInt()
 	if err != nil {
 		return nil, fmt.Errorf("error receiving string slice size:\n%w", err)
 	}
 
 	slice := make([]string, len)
 	for i := 0; i < int(len); i++ {
-		slice[i], err = c.ReceiveString()
+		slice[i], err = c.RecvString()
 		if err != nil {
 			return nil, fmt.Errorf("error receiving string slice:\n%w", err)
 		}
@@ -132,8 +132,8 @@ func (c *NetCommunication) SendFileData(fileReader io.Reader, fileLength int64) 
 	return nil
 }
 
-func (c *NetCommunication) ReceiveFileData(fileWriter io.Writer) error {
-	remaining, err := c.ReceiveVarInt()
+func (c *NetCommunication) RecvFileData(fileWriter io.Writer) error {
+	remaining, err := c.RecvVarInt()
 	if err != nil {
 		return fmt.Errorf("error receiving file length:\n%w", err)
 	}
