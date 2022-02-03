@@ -9,12 +9,13 @@ import (
 )
 
 type Upload struct {
-	comm   netio.Communicator
-	opcode int
+	comm     netio.Communicator
+	localcpy fileio.Localcopy
+	opcode   int
 }
 
-func NewUpload(comm netio.Communicator, opcode int) *Upload {
-	return &Upload{comm, opcode}
+func NewUpload(comm netio.Communicator, localcpy fileio.Localcopy, opcode int) *Upload {
+	return &Upload{comm, localcpy, opcode}
 }
 
 func (u *Upload) sendCommit(commit *clientcommit.Commit) error {
@@ -31,7 +32,7 @@ func (u *Upload) sendCommit(commit *clientcommit.Commit) error {
 }
 
 func (u *Upload) sendCompressedBlob(filePath string) error {
-	tmpFile, err := fileio.CompressToTempFile(filePath)
+	tmpFile, err := u.localcpy.CompressToTempFile(filePath)
 	if err != nil {
 		return fmt.Errorf("error compressing file %s:\n%w", filePath, err)
 	}
@@ -70,7 +71,7 @@ func (u *Upload) UploadCommit(message, username string) error {
 		return fmt.Errorf("cannot send opcode:\n%w", err)
 	}
 
-	commit, err := clientcommit.CreateCommit(message, username)
+	commit, err := clientcommit.CreateCommit(message, username, u.localcpy)
 	if err != nil {
 		return fmt.Errorf("error creating commit:\n%w", err)
 	}

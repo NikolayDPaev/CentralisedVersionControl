@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/commands"
+	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileio"
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
@@ -127,7 +128,7 @@ func downloadCommit(args []string) error {
 		return fmt.Errorf("error connecting to server:\n%w", err)
 	}
 	defer c.Close()
-	download := commands.NewDownload(netio.NewCommunicator(CHUNK_SIZE, c, c), DOWNLOAD_COMMIT, OK)
+	download := commands.NewDownload(netio.NewCommunicator(CHUNK_SIZE, c, c), &fileio.Localfiles{}, DOWNLOAD_COMMIT, OK)
 
 	message, err := download.DownloadCommit(args[1])
 	if err != nil {
@@ -148,7 +149,7 @@ func uploadCommit() error {
 		return fmt.Errorf("error connecting to server:\n%w", err)
 	}
 	defer c.Close()
-	upload := commands.NewUpload(netio.NewCommunicator(CHUNK_SIZE, c, c), UPLOAD_COMMIT)
+	upload := commands.NewUpload(netio.NewCommunicator(CHUNK_SIZE, c, c), &fileio.Localfiles{}, UPLOAD_COMMIT)
 
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Enter commit message:")

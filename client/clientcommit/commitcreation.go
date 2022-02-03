@@ -62,15 +62,15 @@ func ReadCommit(id string, comm netio.Communicator) (*Commit, error) {
 	return commit, nil
 }
 
-func CreateCommit(message, creator string) (*Commit, error) {
-	paths, err := fileio.GetPathsOfAllFiles()
+func CreateCommit(message, creator string, localcpy fileio.Localcopy) (*Commit, error) {
+	paths, err := localcpy.GetPathsOfAllFiles()
 	if err != nil {
 		return nil, fmt.Errorf("error getting filenames for creating commit:\n%w", err)
 	}
 
 	fileMap := make(map[string]string, len(paths))
 	for _, path := range paths {
-		hash, err := fileio.GetHashOfFile(path)
+		hash, err := localcpy.GetHashOfFile(path)
 		if err != nil {
 			return nil, err
 		}

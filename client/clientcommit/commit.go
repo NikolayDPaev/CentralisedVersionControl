@@ -55,11 +55,11 @@ func (c *Commit) Send(comm netio.Communicator) error {
 
 	return nil
 }
-func (c *Commit) GetMissingFiles() (map[string]string, error) {
+func (c *Commit) GetMissingFiles(localcpy fileio.Localcopy) (map[string]string, error) {
 	missingFileMap := make(map[string]string, len(c.fileMap)/2)
 
 	for blobId, path := range c.fileMap {
-		exists, err := fileio.FileWithHashExists(path, blobId)
+		exists, err := localcpy.FileWithHashExists(path, blobId)
 		if err != nil {
 			return nil, err
 		}

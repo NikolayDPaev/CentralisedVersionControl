@@ -13,13 +13,14 @@ import (
 var errInvalidCommitId = errors.New("invalid commit ID")
 
 type Download struct {
-	comm   netio.Communicator
-	opcode int
-	okcode int
+	comm     netio.Communicator
+	localcpy fileio.Localcopy
+	opcode   int
+	okcode   int
 }
 
-func NewDownload(comm netio.Communicator, opcode, okcode int) *Download {
-	return &Download{comm, opcode, okcode}
+func NewDownload(comm netio.Communicator, localcpy fileio.Localcopy, opcode, okcode int) *Download {
+	return &Download{comm, localcpy, opcode, okcode}
 }
 
 func (d *Download) receiveCommit(commitId string) (*clientcommit.Commit, error) {
@@ -61,7 +62,7 @@ func (d *Download) receiveBlob(missingFilesMap map[string]string) error {
 		return fmt.Errorf("error receiving blob:\n%w", err)
 	}
 
-	if err := fileio.DecompressFile(fileName, tmp); err != nil {
+	if err := d.localcpy.DecompressFile(fileName, tmp); err != nil {
 		return fmt.Errorf("error decompressing blob:\n%w", err)
 	}
 	return nil
@@ -94,7 +95,7 @@ func (d *Download) DownloadCommit(commitId string) (string, error) {
 
 	// delete every other file
 
-	missingFilesMap, err := commit.GetMissingFiles()
+	missingFilesMap, err := commit.GetMissingFiles(d.localcpy)
 	if err != nil {
 		return "", fmt.Errorf("error getting missing files from commit:\n%w", err)
 	}

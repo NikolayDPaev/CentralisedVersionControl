@@ -12,7 +12,7 @@ const (
 	CHUNK_SIZE = 4096
 )
 
-func CompressToTempFile(source string) (*os.File, error) {
+func (l *Localfiles) CompressToTempFile(source string) (*os.File, error) {
 	sFile, err := os.Open(source)
 	if err != nil {
 		return nil, fmt.Errorf("error opening source file: %w", err)
@@ -42,15 +42,15 @@ func CompressToTempFile(source string) (*os.File, error) {
 	return dFile, nil
 }
 
-func createDirectoriesInPath(dest string) error {
+func (l *Localfiles) createDirectoriesInPath(dest string) error {
 	if err := os.MkdirAll(filepath.Dir(dest), 0777); err != nil {
 		return fmt.Errorf("cannot create path: %w", err)
 	}
 	return nil
 }
 
-func DecompressFile(dest string, sFile *os.File) error {
-	if err := createDirectoriesInPath(dest); err != nil {
+func (l *Localfiles) DecompressFile(dest string, sFile *os.File) error {
+	if err := l.createDirectoriesInPath(dest); err != nil {
 		return fmt.Errorf("error creating file directory: %w", err)
 	}
 	dFile, err := os.Create(dest)

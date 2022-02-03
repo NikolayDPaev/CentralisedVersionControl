@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func fileExists(filePath string) (bool, error) {
+func (l *Localfiles) fileExists(filePath string) (bool, error) {
 	if _, err := os.Stat(filePath); err == nil {
 		return true, nil
 
@@ -22,7 +22,7 @@ func fileExists(filePath string) (bool, error) {
 	}
 }
 
-func GetHashOfFile(filepath string) (string, error) {
+func (l *Localfiles) GetHashOfFile(filepath string) (string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return "", fmt.Errorf("error opening %s: %w", filepath, err)
@@ -39,8 +39,8 @@ func GetHashOfFile(filepath string) (string, error) {
 	return str, nil
 }
 
-func FileWithHashExists(filepath string, hash string) (bool, error) {
-	fileExists, err := fileExists(filepath)
+func (l *Localfiles) FileWithHashExists(filepath string, hash string) (bool, error) {
+	fileExists, err := l.fileExists(filepath)
 	if err != nil {
 		return false, fmt.Errorf("error checking if file exists: %w", err)
 	}
@@ -48,7 +48,7 @@ func FileWithHashExists(filepath string, hash string) (bool, error) {
 		return false, nil
 	}
 
-	realHash, err := GetHashOfFile(filepath)
+	realHash, err := l.GetHashOfFile(filepath)
 	if err != nil {
 		return false, err
 	}
@@ -56,7 +56,7 @@ func FileWithHashExists(filepath string, hash string) (bool, error) {
 	return hash == realHash, nil
 }
 
-func FileSize(path string) (int64, error) {
+func (l *Localfiles) FileSize(path string) (int64, error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
 		return 0, fmt.Errorf("cannot get file %s file info: %w", path, err)
@@ -65,7 +65,7 @@ func FileSize(path string) (int64, error) {
 	return fileInfo.Size(), nil
 }
 
-func GetPathsOfAllFiles() ([]string, error) {
+func (l *Localfiles) GetPathsOfAllFiles() ([]string, error) {
 	var paths []string
 	var stack []string
 
@@ -92,7 +92,7 @@ func GetPathsOfAllFiles() ([]string, error) {
 	return paths, nil
 }
 
-func removeDirIfEmpty(dir string) error {
+func (l *Localfiles) removeDirIfEmpty(dir string) error {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("error scanning directory %s: %w", dir, err)
@@ -105,7 +105,7 @@ func removeDirIfEmpty(dir string) error {
 	return nil
 }
 
-func deleteFileIfNotInSet(file string, filesSet map[string]struct{}) error {
+func (l *Localfiles) deleteFileIfNotInSet(file string, filesSet map[string]struct{}) error {
 	if _, ok := filesSet[file]; !ok {
 		if err := os.Remove(file); err != nil {
 			return fmt.Errorf("error deleting file %s: %w", file, err)
@@ -114,7 +114,7 @@ func deleteFileIfNotInSet(file string, filesSet map[string]struct{}) error {
 	return nil
 }
 
-func CleanOtherFiles(commitFilesSet map[string]struct{}) error {
+func (l *Localfiles) CleanOtherFiles(commitFilesSet map[string]struct{}) error {
 	var stack []string
 	stack = append(stack, ".")
 	for len(stack) > 0 {
@@ -132,12 +132,12 @@ func CleanOtherFiles(commitFilesSet map[string]struct{}) error {
 				stack = append(stack, curDir+"/"+file.Name())
 			} else {
 				file := curDir + "/" + file.Name()
-				if err := deleteFileIfNotInSet(file, commitFilesSet); err != nil {
+				if err := l.deleteFileIfNotInSet(file, commitFilesSet); err != nil {
 					return err
 				}
 			}
 		}
-		if err := removeDirIfEmpty(curDir); err != nil {
+		if err := l.removeDirIfEmpty(curDir); err != nil {
 			return err
 		}
 	}
