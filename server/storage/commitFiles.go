@@ -67,12 +67,13 @@ func (s *FileStorage) CommitList() []string {
 	return result
 }
 
-func (s *FileStorage) OpenCommit(commitId string) (StorageEntry, error) {
+func (s *FileStorage) OpenCommit(commitId string) (*servercommit.Commit, error) {
 	file, err := os.Open("commits/" + commitId)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open commit %s:\n%w", commitId, err)
 	}
-	return file, nil
+	fileComm := netio.NewCommunicator(0, file, file)
+	return servercommit.ReadCommit(commitId, fileComm)
 }
 
 func (s *FileStorage) SaveCommit(commit *servercommit.Commit) error {
@@ -80,14 +81,14 @@ func (s *FileStorage) SaveCommit(commit *servercommit.Commit) error {
 		return fmt.Errorf("cannot create commit folder:\n%w", err)
 	}
 
-	file, err := os.Create("commits/" + commit.Id())
+	file, err := os.Create("commits/" + commit.Id)
 	if err != nil {
-		return fmt.Errorf("cannot create commit file %s:\n%w", commit.Id(), err)
+		return fmt.Errorf("cannot create commit file %s:\n%w", commit.Id, err)
 	}
 	defer file.Close()
 
 	comm := netio.NewCommunicator(100, file, file)
-	if err := commit.Write(comm); err != nil {
+	if err := commit.WriteData(comm); err != nil {
 		return fmt.Errorf("error saving commit %s: %w", commit.String(), err)
 	}
 	return nil

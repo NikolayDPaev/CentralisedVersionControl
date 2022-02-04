@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
-	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
 )
 
@@ -18,23 +17,22 @@ type SendCommit struct {
 	storage storage.Storage
 }
 
-func NewSendCommit(comm netio.Communicator, storage storage.Storage) *ReceiveCommit {
-	return &ReceiveCommit{comm, storage}
+func NewSendCommit(comm netio.Communicator, storage storage.Storage) *SendCommit {
+	return &SendCommit{comm, storage}
 }
 
 func (s *SendCommit) sendCommitData(commitId string) error {
-	commitFile, err := s.storage.OpenCommit(commitId)
+	commit, err := s.storage.OpenCommit(commitId)
 	if err != nil {
 		return fmt.Errorf("error opening commit file of commit %s: %s", commitId, err)
 	}
-	defer commitFile.Close()
 
-	commit, err := servercommit.ReadCommit(commitId, s.comm)
+	err = s.comm.SendString(commit.Id)
 	if err != nil {
-		return fmt.Errorf("error reading commit file %s: %s", commitId, err)
+		return fmt.Errorf("error sending commit id %s: %s", commitId, err)
 	}
 
-	err = commit.Write(s.comm)
+	err = commit.WriteData(s.comm)
 	if err != nil {
 		return fmt.Errorf("error sending commit %s: %s", commitId, err)
 	}

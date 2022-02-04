@@ -85,17 +85,17 @@ type FakeStorage struct {
 		result1 storage.StorageEntry
 		result2 error
 	}
-	OpenCommitStub        func(string) (storage.StorageEntry, error)
+	OpenCommitStub        func(string) (*servercommit.Commit, error)
 	openCommitMutex       sync.RWMutex
 	openCommitArgsForCall []struct {
 		arg1 string
 	}
 	openCommitReturns struct {
-		result1 storage.StorageEntry
+		result1 *servercommit.Commit
 		result2 error
 	}
 	openCommitReturnsOnCall map[int]struct {
-		result1 storage.StorageEntry
+		result1 *servercommit.Commit
 		result2 error
 	}
 	SaveBlobStub        func(string, netio.Communicator) error
@@ -498,7 +498,7 @@ func (fake *FakeStorage) OpenBlobReturnsOnCall(i int, result1 storage.StorageEnt
 	}{result1, result2}
 }
 
-func (fake *FakeStorage) OpenCommit(arg1 string) (storage.StorageEntry, error) {
+func (fake *FakeStorage) OpenCommit(arg1 string) (*servercommit.Commit, error) {
 	fake.openCommitMutex.Lock()
 	ret, specificReturn := fake.openCommitReturnsOnCall[len(fake.openCommitArgsForCall)]
 	fake.openCommitArgsForCall = append(fake.openCommitArgsForCall, struct {
@@ -523,7 +523,7 @@ func (fake *FakeStorage) OpenCommitCallCount() int {
 	return len(fake.openCommitArgsForCall)
 }
 
-func (fake *FakeStorage) OpenCommitCalls(stub func(string) (storage.StorageEntry, error)) {
+func (fake *FakeStorage) OpenCommitCalls(stub func(string) (*servercommit.Commit, error)) {
 	fake.openCommitMutex.Lock()
 	defer fake.openCommitMutex.Unlock()
 	fake.OpenCommitStub = stub
@@ -536,28 +536,28 @@ func (fake *FakeStorage) OpenCommitArgsForCall(i int) string {
 	return argsForCall.arg1
 }
 
-func (fake *FakeStorage) OpenCommitReturns(result1 storage.StorageEntry, result2 error) {
+func (fake *FakeStorage) OpenCommitReturns(result1 *servercommit.Commit, result2 error) {
 	fake.openCommitMutex.Lock()
 	defer fake.openCommitMutex.Unlock()
 	fake.OpenCommitStub = nil
 	fake.openCommitReturns = struct {
-		result1 storage.StorageEntry
+		result1 *servercommit.Commit
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeStorage) OpenCommitReturnsOnCall(i int, result1 storage.StorageEntry, result2 error) {
+func (fake *FakeStorage) OpenCommitReturnsOnCall(i int, result1 *servercommit.Commit, result2 error) {
 	fake.openCommitMutex.Lock()
 	defer fake.openCommitMutex.Unlock()
 	fake.OpenCommitStub = nil
 	if fake.openCommitReturnsOnCall == nil {
 		fake.openCommitReturnsOnCall = make(map[int]struct {
-			result1 storage.StorageEntry
+			result1 *servercommit.Commit
 			result2 error
 		})
 	}
 	fake.openCommitReturnsOnCall[i] = struct {
-		result1 storage.StorageEntry
+		result1 *servercommit.Commit
 		result2 error
 	}{result1, result2}
 }

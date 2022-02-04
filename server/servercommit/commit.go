@@ -8,14 +8,10 @@ import (
 )
 
 type Commit struct {
-	id      string
-	message string
-	creator string
-	tree    string
-}
-
-func NewCommit(id, message, creator, tree string) *Commit {
-	return &Commit{id, message, creator, tree}
+	Id      string
+	Message string
+	Creator string
+	Tree    string
 }
 
 func ReadCommitData(comm netio.Communicator) (string, string, error) {
@@ -45,22 +41,18 @@ func ReadCommit(id string, comm netio.Communicator) (*Commit, error) {
 	return &Commit{id, message, creator, tree}, nil
 }
 
-func (c *Commit) Id() string {
-	return c.id
-}
-
-func (c *Commit) Write(comm netio.Communicator) error {
-	err := comm.SendString(c.message)
+func (c *Commit) WriteData(comm netio.Communicator) error {
+	err := comm.SendString(c.Message)
 	if err != nil {
 		return fmt.Errorf("cannot send commit message:\n%w", err)
 	}
 
-	err = comm.SendString(c.creator)
+	err = comm.SendString(c.Creator)
 	if err != nil {
 		return fmt.Errorf("cannot send commit creator:\n%w", err)
 	}
 
-	if err := comm.SendString(c.tree); err != nil {
+	if err := comm.SendString(c.Tree); err != nil {
 		return fmt.Errorf("cannot write commit tree:\n%w", err)
 	}
 
@@ -68,7 +60,7 @@ func (c *Commit) Write(comm netio.Communicator) error {
 }
 
 func (c *Commit) ExtractBlobIds() []string { // regex ????
-	lines := strings.Split(c.tree, "\n")
+	lines := strings.Split(c.Tree, "\n")
 
 	blobIds := make([]string, len(lines))
 	for i, line := range lines {
@@ -79,5 +71,5 @@ func (c *Commit) ExtractBlobIds() []string { // regex ????
 }
 
 func (c Commit) String() string {
-	return c.id + " \"" + c.message + "\" " + c.creator
+	return c.Id + " \"" + c.Message + "\" " + c.Creator
 }
