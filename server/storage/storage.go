@@ -11,6 +11,8 @@ type StorageEntry interface {
 	Close() error
 }
 
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Storage
+
 type Storage interface {
 	OpenBlob(blobId string) (StorageEntry, error)
 	SaveBlob(blobId string, comm netio.Communicator) error

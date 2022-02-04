@@ -2,6 +2,8 @@ package netio
 
 import "io"
 
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Communicator
+
 type Communicator interface {
 	SendVarInt(num int64) error
 	RecvVarInt() (int64, error)

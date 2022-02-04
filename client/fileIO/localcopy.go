@@ -2,6 +2,8 @@ package fileio
 
 import "os"
 
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Localcopy
+
 type Localcopy interface {
 	GetHashOfFile(filepath string) (string, error)
 	GetPathsOfAllFiles() ([]string, error)

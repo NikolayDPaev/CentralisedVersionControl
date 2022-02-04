@@ -4,47 +4,28 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio/netiofakes"
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/clienthandler"
+	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage/storagefakes"
 )
 
-type commitListCommunicatorMock struct {
-	communicatorDefMock
-	testStrings []string
-	successful  bool
-}
-
-type commitListStorageMock struct {
-	storageDefMock
-	testStrings []string
-}
-
-func (s *commitListStorageMock) CommitList() []string {
-	return []string{"some", "strings", "representing", "commit"}
-}
-
-func (c *commitListCommunicatorMock) SendStringSlice(slice []string) error {
-	if reflect.DeepEqual(slice, []string{"some", "strings", "representing", "commit"}) {
-		c.successful = true
-	}
-	return nil
-}
-
 func TestCommitListHandle(t *testing.T) {
-	tests := [][]string{
+	testCases := [][]string{
 		{},
-		{"some", "strings", "representing", "commit"},
+		{"some", "strings", "representing", "commits"},
 	}
-	for _, test := range tests {
-		netMock := &commitListCommunicatorMock{}
-		fileMock := &commitListStorageMock{}
-		netMock.testStrings = test
-		fileMock.testStrings = test
+	for _, testCase := range testCases {
+		netFake := &netiofakes.FakeCommunicator{}
+		fileFake := &storagefakes.FakeStorage{}
 
-		commitList := clienthandler.NewCommitList(netMock, fileMock)
+		fileFake.CommitListReturns(testCase)
+
+		commitList := clienthandler.NewCommitList(netFake, fileFake)
 		commitList.Handle()
 
-		if !netMock.successful {
-			t.FailNow()
+		actualArgs := netFake.SendStringSliceArgsForCall(0)
+		if !reflect.DeepEqual(testCase, actualArgs) {
+			t.Errorf("Send string called with wrong args. Expected: %s, actual: %s", testCase, actualArgs)
 		}
 	}
 }
