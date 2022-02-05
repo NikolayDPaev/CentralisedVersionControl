@@ -130,11 +130,13 @@ func downloadCommit(args []string) error {
 	defer c.Close()
 	download := commands.NewDownload(netio.NewCommunicator(CHUNK_SIZE, c, c), &fileio.Localfiles{}, DOWNLOAD_COMMIT, OK)
 
-	message, err := download.DownloadCommit(args[1])
-	if err != nil {
-		return fmt.Errorf("cannot execute download commit operation:\n%w", err)
+	if err := download.DownloadCommit(args[1]); err != nil {
+		if errors.Is(err, commands.ErrInvalidCommitId) {
+			fmt.Println("Invalid commit Id")
+		} else {
+			return fmt.Errorf("cannot execute download commit operation:\n%w", err)
+		}
 	}
-	fmt.Println(message)
 	return nil
 }
 

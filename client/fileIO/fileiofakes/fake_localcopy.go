@@ -2,10 +2,10 @@
 package fileiofakes
 
 import (
-	"os"
 	"sync"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileio"
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
 type FakeLocalcopy struct {
@@ -18,31 +18,6 @@ type FakeLocalcopy struct {
 		result1 error
 	}
 	cleanOtherFilesReturnsOnCall map[int]struct {
-		result1 error
-	}
-	CompressToTempFileStub        func(string) (*os.File, error)
-	compressToTempFileMutex       sync.RWMutex
-	compressToTempFileArgsForCall []struct {
-		arg1 string
-	}
-	compressToTempFileReturns struct {
-		result1 *os.File
-		result2 error
-	}
-	compressToTempFileReturnsOnCall map[int]struct {
-		result1 *os.File
-		result2 error
-	}
-	DecompressFileStub        func(string, *os.File) error
-	decompressFileMutex       sync.RWMutex
-	decompressFileArgsForCall []struct {
-		arg1 string
-		arg2 *os.File
-	}
-	decompressFileReturns struct {
-		result1 error
-	}
-	decompressFileReturnsOnCall map[int]struct {
 		result1 error
 	}
 	FileSizeStub        func(string) (int64, error)
@@ -96,6 +71,30 @@ type FakeLocalcopy struct {
 	getPathsOfAllFilesReturnsOnCall map[int]struct {
 		result1 []string
 		result2 error
+	}
+	ReceiveBlobStub        func(string, netio.Communicator) error
+	receiveBlobMutex       sync.RWMutex
+	receiveBlobArgsForCall []struct {
+		arg1 string
+		arg2 netio.Communicator
+	}
+	receiveBlobReturns struct {
+		result1 error
+	}
+	receiveBlobReturnsOnCall map[int]struct {
+		result1 error
+	}
+	SendBlobStub        func(string, netio.Communicator) error
+	sendBlobMutex       sync.RWMutex
+	sendBlobArgsForCall []struct {
+		arg1 string
+		arg2 netio.Communicator
+	}
+	sendBlobReturns struct {
+		result1 error
+	}
+	sendBlobReturnsOnCall map[int]struct {
+		result1 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -158,132 +157,6 @@ func (fake *FakeLocalcopy) CleanOtherFilesReturnsOnCall(i int, result1 error) {
 		})
 	}
 	fake.cleanOtherFilesReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeLocalcopy) CompressToTempFile(arg1 string) (*os.File, error) {
-	fake.compressToTempFileMutex.Lock()
-	ret, specificReturn := fake.compressToTempFileReturnsOnCall[len(fake.compressToTempFileArgsForCall)]
-	fake.compressToTempFileArgsForCall = append(fake.compressToTempFileArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	stub := fake.CompressToTempFileStub
-	fakeReturns := fake.compressToTempFileReturns
-	fake.recordInvocation("CompressToTempFile", []interface{}{arg1})
-	fake.compressToTempFileMutex.Unlock()
-	if stub != nil {
-		return stub(arg1)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeLocalcopy) CompressToTempFileCallCount() int {
-	fake.compressToTempFileMutex.RLock()
-	defer fake.compressToTempFileMutex.RUnlock()
-	return len(fake.compressToTempFileArgsForCall)
-}
-
-func (fake *FakeLocalcopy) CompressToTempFileCalls(stub func(string) (*os.File, error)) {
-	fake.compressToTempFileMutex.Lock()
-	defer fake.compressToTempFileMutex.Unlock()
-	fake.CompressToTempFileStub = stub
-}
-
-func (fake *FakeLocalcopy) CompressToTempFileArgsForCall(i int) string {
-	fake.compressToTempFileMutex.RLock()
-	defer fake.compressToTempFileMutex.RUnlock()
-	argsForCall := fake.compressToTempFileArgsForCall[i]
-	return argsForCall.arg1
-}
-
-func (fake *FakeLocalcopy) CompressToTempFileReturns(result1 *os.File, result2 error) {
-	fake.compressToTempFileMutex.Lock()
-	defer fake.compressToTempFileMutex.Unlock()
-	fake.CompressToTempFileStub = nil
-	fake.compressToTempFileReturns = struct {
-		result1 *os.File
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeLocalcopy) CompressToTempFileReturnsOnCall(i int, result1 *os.File, result2 error) {
-	fake.compressToTempFileMutex.Lock()
-	defer fake.compressToTempFileMutex.Unlock()
-	fake.CompressToTempFileStub = nil
-	if fake.compressToTempFileReturnsOnCall == nil {
-		fake.compressToTempFileReturnsOnCall = make(map[int]struct {
-			result1 *os.File
-			result2 error
-		})
-	}
-	fake.compressToTempFileReturnsOnCall[i] = struct {
-		result1 *os.File
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeLocalcopy) DecompressFile(arg1 string, arg2 *os.File) error {
-	fake.decompressFileMutex.Lock()
-	ret, specificReturn := fake.decompressFileReturnsOnCall[len(fake.decompressFileArgsForCall)]
-	fake.decompressFileArgsForCall = append(fake.decompressFileArgsForCall, struct {
-		arg1 string
-		arg2 *os.File
-	}{arg1, arg2})
-	stub := fake.DecompressFileStub
-	fakeReturns := fake.decompressFileReturns
-	fake.recordInvocation("DecompressFile", []interface{}{arg1, arg2})
-	fake.decompressFileMutex.Unlock()
-	if stub != nil {
-		return stub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fakeReturns.result1
-}
-
-func (fake *FakeLocalcopy) DecompressFileCallCount() int {
-	fake.decompressFileMutex.RLock()
-	defer fake.decompressFileMutex.RUnlock()
-	return len(fake.decompressFileArgsForCall)
-}
-
-func (fake *FakeLocalcopy) DecompressFileCalls(stub func(string, *os.File) error) {
-	fake.decompressFileMutex.Lock()
-	defer fake.decompressFileMutex.Unlock()
-	fake.DecompressFileStub = stub
-}
-
-func (fake *FakeLocalcopy) DecompressFileArgsForCall(i int) (string, *os.File) {
-	fake.decompressFileMutex.RLock()
-	defer fake.decompressFileMutex.RUnlock()
-	argsForCall := fake.decompressFileArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
-}
-
-func (fake *FakeLocalcopy) DecompressFileReturns(result1 error) {
-	fake.decompressFileMutex.Lock()
-	defer fake.decompressFileMutex.Unlock()
-	fake.DecompressFileStub = nil
-	fake.decompressFileReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeLocalcopy) DecompressFileReturnsOnCall(i int, result1 error) {
-	fake.decompressFileMutex.Lock()
-	defer fake.decompressFileMutex.Unlock()
-	fake.DecompressFileStub = nil
-	if fake.decompressFileReturnsOnCall == nil {
-		fake.decompressFileReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.decompressFileReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -537,15 +410,135 @@ func (fake *FakeLocalcopy) GetPathsOfAllFilesReturnsOnCall(i int, result1 []stri
 	}{result1, result2}
 }
 
+func (fake *FakeLocalcopy) ReceiveBlob(arg1 string, arg2 netio.Communicator) error {
+	fake.receiveBlobMutex.Lock()
+	ret, specificReturn := fake.receiveBlobReturnsOnCall[len(fake.receiveBlobArgsForCall)]
+	fake.receiveBlobArgsForCall = append(fake.receiveBlobArgsForCall, struct {
+		arg1 string
+		arg2 netio.Communicator
+	}{arg1, arg2})
+	stub := fake.ReceiveBlobStub
+	fakeReturns := fake.receiveBlobReturns
+	fake.recordInvocation("ReceiveBlob", []interface{}{arg1, arg2})
+	fake.receiveBlobMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeLocalcopy) ReceiveBlobCallCount() int {
+	fake.receiveBlobMutex.RLock()
+	defer fake.receiveBlobMutex.RUnlock()
+	return len(fake.receiveBlobArgsForCall)
+}
+
+func (fake *FakeLocalcopy) ReceiveBlobCalls(stub func(string, netio.Communicator) error) {
+	fake.receiveBlobMutex.Lock()
+	defer fake.receiveBlobMutex.Unlock()
+	fake.ReceiveBlobStub = stub
+}
+
+func (fake *FakeLocalcopy) ReceiveBlobArgsForCall(i int) (string, netio.Communicator) {
+	fake.receiveBlobMutex.RLock()
+	defer fake.receiveBlobMutex.RUnlock()
+	argsForCall := fake.receiveBlobArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeLocalcopy) ReceiveBlobReturns(result1 error) {
+	fake.receiveBlobMutex.Lock()
+	defer fake.receiveBlobMutex.Unlock()
+	fake.ReceiveBlobStub = nil
+	fake.receiveBlobReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeLocalcopy) ReceiveBlobReturnsOnCall(i int, result1 error) {
+	fake.receiveBlobMutex.Lock()
+	defer fake.receiveBlobMutex.Unlock()
+	fake.ReceiveBlobStub = nil
+	if fake.receiveBlobReturnsOnCall == nil {
+		fake.receiveBlobReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.receiveBlobReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeLocalcopy) SendBlob(arg1 string, arg2 netio.Communicator) error {
+	fake.sendBlobMutex.Lock()
+	ret, specificReturn := fake.sendBlobReturnsOnCall[len(fake.sendBlobArgsForCall)]
+	fake.sendBlobArgsForCall = append(fake.sendBlobArgsForCall, struct {
+		arg1 string
+		arg2 netio.Communicator
+	}{arg1, arg2})
+	stub := fake.SendBlobStub
+	fakeReturns := fake.sendBlobReturns
+	fake.recordInvocation("SendBlob", []interface{}{arg1, arg2})
+	fake.sendBlobMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeLocalcopy) SendBlobCallCount() int {
+	fake.sendBlobMutex.RLock()
+	defer fake.sendBlobMutex.RUnlock()
+	return len(fake.sendBlobArgsForCall)
+}
+
+func (fake *FakeLocalcopy) SendBlobCalls(stub func(string, netio.Communicator) error) {
+	fake.sendBlobMutex.Lock()
+	defer fake.sendBlobMutex.Unlock()
+	fake.SendBlobStub = stub
+}
+
+func (fake *FakeLocalcopy) SendBlobArgsForCall(i int) (string, netio.Communicator) {
+	fake.sendBlobMutex.RLock()
+	defer fake.sendBlobMutex.RUnlock()
+	argsForCall := fake.sendBlobArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeLocalcopy) SendBlobReturns(result1 error) {
+	fake.sendBlobMutex.Lock()
+	defer fake.sendBlobMutex.Unlock()
+	fake.SendBlobStub = nil
+	fake.sendBlobReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeLocalcopy) SendBlobReturnsOnCall(i int, result1 error) {
+	fake.sendBlobMutex.Lock()
+	defer fake.sendBlobMutex.Unlock()
+	fake.SendBlobStub = nil
+	if fake.sendBlobReturnsOnCall == nil {
+		fake.sendBlobReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.sendBlobReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeLocalcopy) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.cleanOtherFilesMutex.RLock()
 	defer fake.cleanOtherFilesMutex.RUnlock()
-	fake.compressToTempFileMutex.RLock()
-	defer fake.compressToTempFileMutex.RUnlock()
-	fake.decompressFileMutex.RLock()
-	defer fake.decompressFileMutex.RUnlock()
 	fake.fileSizeMutex.RLock()
 	defer fake.fileSizeMutex.RUnlock()
 	fake.fileWithHashExistsMutex.RLock()
@@ -554,6 +547,10 @@ func (fake *FakeLocalcopy) Invocations() map[string][][]interface{} {
 	defer fake.getHashOfFileMutex.RUnlock()
 	fake.getPathsOfAllFilesMutex.RLock()
 	defer fake.getPathsOfAllFilesMutex.RUnlock()
+	fake.receiveBlobMutex.RLock()
+	defer fake.receiveBlobMutex.RUnlock()
+	fake.sendBlobMutex.RLock()
+	defer fake.sendBlobMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

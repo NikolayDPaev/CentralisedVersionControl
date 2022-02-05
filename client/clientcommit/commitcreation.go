@@ -1,9 +1,7 @@
 package clientcommit
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileio"
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
@@ -23,23 +21,12 @@ func readMetadata(comm netio.Communicator) (string, string, error) {
 	return message, creator, nil
 }
 
-func getMap(tree string) (map[string]string, error) {
-	lines := strings.Split(tree, "\n")
-
-	fileMap := make(map[string]string, len(lines))
-
-	for _, line := range lines {
-		elements := strings.Split(line, " ")
-		if len(elements) != 2 {
-			return nil, errors.New("corrupt commit tree string")
-		}
-		fileMap[elements[0]] = elements[1]
+func ReadCommit(id string, comm netio.Communicator) (*Commit, error) {
+	receivedId, err := comm.RecvString()
+	if err != nil || id != receivedId {
+		return nil, fmt.Errorf("error receiving id of commit:\n%w", err)
 	}
 
-	return fileMap, nil
-}
-
-func ReadCommit(id string, comm netio.Communicator) (*Commit, error) {
 	message, creator, err := readMetadata(comm)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read metadata of commit:\n%w", err)
@@ -50,14 +37,15 @@ func ReadCommit(id string, comm netio.Communicator) (*Commit, error) {
 		return nil, fmt.Errorf("cannot read tree string of commit:\n%w", err)
 	}
 
-	fileMap, err := getMap(strTree)
+	fileMap, err := GetMap(strTree)
 	if err != nil {
 		return nil, err
 	}
 
 	commit := &Commit{message, creator, fileMap}
-	if id != commit.Md5Hash() {
-		return nil, errors.New("mismatched hash values")
+	commitHash := commit.Md5Hash()
+	if id != commitHash {
+		return nil, fmt.Errorf("mismatched hash values: expected: %s, actual: %s", id, commitHash)
 	}
 	return commit, nil
 }
@@ -77,5 +65,5 @@ func CreateCommit(message, creator string, localcpy fileio.Localcopy) (*Commit, 
 		fileMap[hash] = path
 	}
 
-	return &Commit{message: message, creator: creator, fileMap: fileMap}, nil
+	return &Commit{Message: message, Creator: creator, FileMap: fileMap}, nil
 }

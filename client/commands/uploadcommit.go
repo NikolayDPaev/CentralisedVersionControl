@@ -24,29 +24,21 @@ func (u *Upload) sendCommit(commit *clientcommit.Commit) error {
 		return fmt.Errorf("error sending commit id:\n%w", err)
 	}
 
-	err = commit.Send(u.comm)
+	err = u.comm.SendString(commit.Message)
 	if err != nil {
-		return fmt.Errorf("error sending commit:\n%w", err)
-	}
-	return nil
-}
-
-func (u *Upload) sendCompressedBlob(filePath string) error {
-	tmpFile, err := u.localcpy.CompressToTempFile(filePath)
-	if err != nil {
-		return fmt.Errorf("error compressing file %s:\n%w", filePath, err)
-	}
-	defer tmpFile.Close()
-
-	stat, err := tmpFile.Stat()
-	if err != nil {
-		return fmt.Errorf("error getting blobTmp size:\n%w", err)
+		return fmt.Errorf("cannot send commit message: %w", err)
 	}
 
-	err = u.comm.SendFileData(tmpFile, stat.Size())
+	err = u.comm.SendString(commit.Creator)
 	if err != nil {
-		return fmt.Errorf("error sending blob:\n%w", err)
+		return fmt.Errorf("cannot send commit creator: %w", err)
 	}
+
+	err = u.comm.SendString(commit.GetTree())
+	if err != nil {
+		return fmt.Errorf("error sending commit tree: %w", err)
+	}
+
 	return nil
 }
 
@@ -60,7 +52,7 @@ func (u *Upload) sendBlob(blobId string, commit *clientcommit.Commit) error {
 		return err
 	}
 
-	if err := u.sendCompressedBlob(path); err != nil {
+	if err := u.localcpy.SendBlob(path, u.comm); err != nil {
 		return fmt.Errorf("error sending file %s:\n%w", path, err)
 	}
 	return nil

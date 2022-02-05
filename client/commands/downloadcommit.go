@@ -3,14 +3,13 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/clientcommit"
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileio"
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
-var errInvalidCommitId = errors.New("invalid commit ID")
+var ErrInvalidCommitId = errors.New("invalid commit ID")
 
 type Download struct {
 	comm     netio.Communicator
@@ -33,7 +32,7 @@ func (d *Download) receiveCommit(commitId string) (*clientcommit.Commit, error) 
 		return nil, fmt.Errorf("error no such commit on server:\n%w", err)
 	}
 	if code != int64(d.okcode) {
-		return nil, errInvalidCommitId
+		return nil, ErrInvalidCommitId
 	}
 
 	fmt.Println("Receiving commit")
@@ -52,20 +51,7 @@ func (d *Download) receiveBlob(missingFilesMap map[string]string) error {
 	}
 	fileName := missingFilesMap[blobId]
 
-	tmp, err := os.CreateTemp("", "blobTmp")
-	if err != nil {
-		return fmt.Errorf("error creating tmpBlob:\n%w", err)
-	}
-	defer tmp.Close()
-
-	if err := d.comm.RecvFileData(tmp); err != nil {
-		return fmt.Errorf("error receiving blob:\n%w", err)
-	}
-
-	if err := d.localcpy.DecompressFile(fileName, tmp); err != nil {
-		return fmt.Errorf("error decompressing blob:\n%w", err)
-	}
-	return nil
+	return d.localcpy.ReceiveBlob(fileName, d.comm)
 }
 
 func (d *Download) receiveBlobs(missingFilesMap map[string]string) error {
@@ -78,42 +64,40 @@ func (d *Download) receiveBlobs(missingFilesMap map[string]string) error {
 	return nil
 }
 
-func (d *Download) DownloadCommit(commitId string) (string, error) {
+func (d *Download) DownloadCommit(commitId string) error {
 	if err := d.comm.SendVarInt(int64(d.opcode)); err != nil {
-		return "", fmt.Errorf("cannot send opcode:\n%w", err)
+		return fmt.Errorf("cannot send opcode:\n%w", err)
 	}
 
 	fmt.Printf("Requesting commit %s\n", commitId)
 	commit, err := d.receiveCommit(commitId)
 	if err != nil {
-		if errors.Is(err, errInvalidCommitId) {
-			return "Invalid commit Id", nil
-		} else {
-			return "", nil
-		}
+		return err
 	}
 
-	// delete every other file
+	if err := d.localcpy.CleanOtherFiles(commit.GetSetOfPaths()); err != nil {
+		return fmt.Errorf("error cleaning other files:\n%w", err)
+	}
 
 	missingFilesMap, err := commit.GetMissingFiles(d.localcpy)
 	if err != nil {
-		return "", fmt.Errorf("error getting missing files from commit:\n%w", err)
+		return fmt.Errorf("error getting missing files from commit:\n%w", err)
 	}
 
-	missingBlobIds := make([]string, 0, len(missingFilesMap))
+	var missingBlobIds []string
 	for k := range missingFilesMap {
 		missingBlobIds = append(missingBlobIds, k)
 	}
 
 	fmt.Printf("Requesting missing files\n")
 	if err := d.comm.SendStringSlice(missingBlobIds); err != nil {
-		return "", fmt.Errorf("error sending missing blobIds:\n%w", err)
+		return fmt.Errorf("error sending missing blobIds:\n%w", err)
 	}
 
 	fmt.Printf("Requesting missing objects: %d\n", len(missingFilesMap))
 	if err := d.receiveBlobs(missingFilesMap); err != nil {
-		return "", fmt.Errorf("error receiving missing blobs:\n%w", err)
+		return fmt.Errorf("error receiving missing blobs:\n%w", err)
 	}
 
-	return "Successfuly downloaded commit", nil
+	return nil
 }

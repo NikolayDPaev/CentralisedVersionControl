@@ -6,13 +6,15 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
 const (
 	CHUNK_SIZE = 4096
 )
 
-func (l *Localfiles) CompressToTempFile(source string) (*os.File, error) {
+func (l *Localfiles) compressToTempFile(source string) (*os.File, error) {
 	sFile, err := os.Open(source)
 	if err != nil {
 		return nil, fmt.Errorf("error opening source file: %w", err)
@@ -49,7 +51,7 @@ func (l *Localfiles) createDirectoriesInPath(dest string) error {
 	return nil
 }
 
-func (l *Localfiles) DecompressFile(dest string, sFile *os.File) error {
+func (l *Localfiles) decompressFile(dest string, sFile *os.File) error {
 	if err := l.createDirectoriesInPath(dest); err != nil {
 		return fmt.Errorf("error creating file directory: %w", err)
 	}
@@ -77,5 +79,41 @@ func (l *Localfiles) DecompressFile(dest string, sFile *os.File) error {
 		return fmt.Errorf("error decompressing chunks of file: %w", err)
 	}
 
+	return nil
+}
+
+func (l *Localfiles) ReceiveBlob(filepath string, comm netio.Communicator) error {
+	tmp, err := os.CreateTemp("", "blobTmp")
+	if err != nil {
+		return fmt.Errorf("error creating tmpBlob:\n%w", err)
+	}
+	defer tmp.Close()
+
+	if err := comm.RecvFileData(tmp); err != nil {
+		return fmt.Errorf("error receiving blob:\n%w", err)
+	}
+
+	if err := l.decompressFile(filepath, tmp); err != nil {
+		return fmt.Errorf("error decompressing blob:\n%w", err)
+	}
+	return nil
+}
+
+func (l *Localfiles) SendBlob(filepath string, comm netio.Communicator) error {
+	tmpFile, err := l.compressToTempFile(filepath)
+	if err != nil {
+		return fmt.Errorf("error compressing file %s:\n%w", filepath, err)
+	}
+	defer tmpFile.Close()
+
+	stat, err := tmpFile.Stat()
+	if err != nil {
+		return fmt.Errorf("error getting blobTmp size:\n%w", err)
+	}
+
+	err = comm.SendFileData(tmpFile, stat.Size())
+	if err != nil {
+		return fmt.Errorf("error sending blob:\n%w", err)
+	}
 	return nil
 }
