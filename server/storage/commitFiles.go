@@ -3,7 +3,6 @@ package storage
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"log"
 	"os"
 	"sort"
@@ -22,21 +21,6 @@ func fileExists(filePath string) (bool, error) {
 	} else {
 		return false, err
 	}
-}
-
-func extractCommitData(fileInfo fs.FileInfo) (string, error) { // !!!
-	file, err := os.Open("commits/" + fileInfo.Name())
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	comm := netio.NewCommunicator(100, file, file)
-	message, creator, err := servercommit.ReadCommitData(comm)
-	if err != nil {
-		return "", err
-	}
-	return fileInfo.Name() + " \"" + message + "\" " + creator, nil
 }
 
 func (s *FileStorage) CommitList() []string {
@@ -58,11 +42,15 @@ func (s *FileStorage) CommitList() []string {
 	})
 
 	result := make([]string, len(files))
-	for i, v := range files {
-		result[i], err = extractCommitData(v)
+	i := 0
+	for _, v := range files {
+		commit, err := s.OpenCommit(v.Name())
 		if err != nil {
+			log.Println(err.Error())
 			continue
 		}
+		result[i] = commit.String()
+		i++
 	}
 	return result
 }
@@ -73,7 +61,7 @@ func (s *FileStorage) OpenCommit(commitId string) (*servercommit.Commit, error) 
 		return nil, fmt.Errorf("cannot open commit %s:\n%w", commitId, err)
 	}
 	fileComm := netio.NewCommunicator(0, file, file)
-	return servercommit.ReadCommit(commitId, fileComm)
+	return servercommit.NewCommitFrom(commitId, fileComm)
 }
 
 func (s *FileStorage) SaveCommit(commit *servercommit.Commit) error {
@@ -88,7 +76,7 @@ func (s *FileStorage) SaveCommit(commit *servercommit.Commit) error {
 	defer file.Close()
 
 	comm := netio.NewCommunicator(100, file, file)
-	if err := commit.WriteData(comm); err != nil {
+	if err := commit.WriteTo(comm); err != nil {
 		return fmt.Errorf("error saving commit %s: %w", commit.String(), err)
 	}
 	return nil

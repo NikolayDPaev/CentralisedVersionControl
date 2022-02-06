@@ -32,7 +32,7 @@ func (s *SendCommit) sendCommitData(commitId string) error {
 		return fmt.Errorf("error sending commit id %s: %s", commitId, err)
 	}
 
-	err = commit.WriteData(s.comm)
+	err = commit.WriteTo(s.comm)
 	if err != nil {
 		return fmt.Errorf("error sending commit %s: %s", commitId, err)
 	}

@@ -22,6 +22,40 @@ func NewDownload(comm netio.Communicator, localcpy fileio.Localcopy, opcode, okc
 	return &Download{comm, localcpy, opcode, okcode}
 }
 
+func ReadCommit(id string, comm netio.Communicator) (*clientcommit.Commit, error) {
+	receivedId, err := comm.RecvString()
+	if err != nil || id != receivedId {
+		return nil, fmt.Errorf("error receiving id of commit:\n%w", err)
+	}
+
+	message, err := comm.RecvString()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read message string of commit:\n%w", err)
+	}
+
+	creator, err := comm.RecvString()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read creator string of commit:\n%w", err)
+	}
+
+	strTree, err := comm.RecvString()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read tree string of commit:\n%w", err)
+	}
+
+	fileMap, err := clientcommit.GetMap(strTree)
+	if err != nil {
+		return nil, err
+	}
+
+	commit := &clientcommit.Commit{Message: message, Creator: creator, FileMap: fileMap}
+	commitHash := commit.Md5Hash()
+	if id != commitHash {
+		return nil, fmt.Errorf("mismatched hash values: expected: %s, actual: %s", id, commitHash)
+	}
+	return commit, nil
+}
+
 func (d *Download) receiveCommit(commitId string) (*clientcommit.Commit, error) {
 	if err := d.comm.SendString(commitId); err != nil {
 		return nil, fmt.Errorf("error sending commit ID:\n%w", err)
@@ -37,29 +71,21 @@ func (d *Download) receiveCommit(commitId string) (*clientcommit.Commit, error) 
 
 	fmt.Println("Receiving commit")
 
-	commit, err := clientcommit.ReadCommit(commitId, d.comm)
+	commit, err := ReadCommit(commitId, d.comm)
 	if err != nil {
 		return nil, fmt.Errorf("error receiving commit:\n%w", err)
 	}
 	return commit, nil
 }
 
-func (d *Download) receiveBlob(missingFilesMap map[string]string) error {
-	blobId, err := d.comm.RecvString()
-	if err != nil {
-		return fmt.Errorf("error receiving blobId:\n%w", err)
-	}
-	fileName := missingFilesMap[blobId]
-
-	return d.localcpy.ReceiveBlob(fileName, d.comm)
-}
-
 func (d *Download) receiveBlobs(missingFilesMap map[string]string) error {
 	for range missingFilesMap {
-		err := d.receiveBlob(missingFilesMap)
+		blobId, err := d.comm.RecvString()
 		if err != nil {
-			return err
+			return fmt.Errorf("error receiving blobId:\n%w", err)
 		}
+		fileName := missingFilesMap[blobId]
+		d.localcpy.ReceiveBlob(fileName, d.comm)
 	}
 	return nil
 }

@@ -54,7 +54,7 @@ func (r *ReceiveCommit) receiveCommit() error {
 		return fmt.Errorf("cannot read id of commit: %w", err)
 	}
 
-	commit, err := servercommit.ReadCommit(id, r.comm)
+	commit, err := servercommit.NewCommitFrom(id, r.comm)
 	if err != nil {
 		return fmt.Errorf("error receiving commit: %w", err)
 	}

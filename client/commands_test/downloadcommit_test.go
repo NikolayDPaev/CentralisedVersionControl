@@ -1,6 +1,7 @@
 package commands_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/clientcommit"
@@ -111,5 +112,22 @@ func TestDownloadcommit(t *testing.T) {
 				t.Errorf("Receive blob called with wrong arg when receiving missing blob: Expected %s, actual %s", missingPaths, actual)
 			}
 		}
+	}
+}
+
+func TestDownloadcommitWrongCommitId(t *testing.T) {
+	commFake := &netiofakes.FakeCommunicator{}
+	fileFake := &fileiofakes.FakeLocalcopy{}
+	commitId := "12345"
+
+	commFake.RecvVarIntReturnsOnCall(0, ERROR, nil)
+
+	downloadCommit := commands.NewDownload(commFake, fileFake, OPCODE, OK)
+	if err := downloadCommit.DownloadCommit(commitId); err != nil && !errors.Is(err, commands.ErrInvalidCommitId) {
+		t.Errorf("Different error catched, expected: %v, actual: %v", commands.ErrInvalidCommitId, err)
+	}
+
+	if actual := commFake.SendVarIntArgsForCall(0); actual != OPCODE {
+		t.Errorf("Send var int called with wrong arg, when sending opcode: Expected %d, actual %d", OPCODE, actual)
 	}
 }

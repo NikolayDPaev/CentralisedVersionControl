@@ -14,23 +14,15 @@ type Commit struct {
 	Tree    string
 }
 
-func ReadCommitData(comm netio.Communicator) (string, string, error) {
+func NewCommitFrom(id string, comm netio.Communicator) (*Commit, error) {
 	message, err := comm.RecvString()
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
 	creator, err := comm.RecvString()
 	if err != nil {
-		return "", "", err
-	}
-	return message, creator, nil
-}
-
-func ReadCommit(id string, comm netio.Communicator) (*Commit, error) {
-	message, creator, err := ReadCommitData(comm)
-	if err != nil {
-		return nil, fmt.Errorf("cannot read metadata of commit:\n%w", err)
+		return nil, err
 	}
 
 	tree, err := comm.RecvString()
@@ -41,7 +33,7 @@ func ReadCommit(id string, comm netio.Communicator) (*Commit, error) {
 	return &Commit{id, message, creator, tree}, nil
 }
 
-func (c *Commit) WriteData(comm netio.Communicator) error {
+func (c *Commit) WriteTo(comm netio.Communicator) error {
 	err := comm.SendString(c.Message)
 	if err != nil {
 		return fmt.Errorf("cannot send commit message:\n%w", err)

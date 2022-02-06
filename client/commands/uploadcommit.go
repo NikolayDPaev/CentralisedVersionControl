@@ -18,6 +18,24 @@ func NewUpload(comm netio.Communicator, localcpy fileio.Localcopy, opcode int) *
 	return &Upload{comm, localcpy, opcode}
 }
 
+func createCommit(message, creator string, localcpy fileio.Localcopy) (*clientcommit.Commit, error) {
+	paths, err := localcpy.GetPathsOfAllFiles()
+	if err != nil {
+		return nil, fmt.Errorf("error getting filenames for creating commit:\n%w", err)
+	}
+
+	fileMap := make(map[string]string, len(paths))
+	for _, path := range paths {
+		hash, err := localcpy.GetHashOfFile(path)
+		if err != nil {
+			return nil, err
+		}
+		fileMap[hash] = path
+	}
+
+	return &clientcommit.Commit{Message: message, Creator: creator, FileMap: fileMap}, nil
+}
+
 func (u *Upload) sendCommit(commit *clientcommit.Commit) error {
 	err := u.comm.SendString(commit.Md5Hash())
 	if err != nil {
@@ -63,10 +81,12 @@ func (u *Upload) UploadCommit(message, username string) error {
 		return fmt.Errorf("cannot send opcode:\n%w", err)
 	}
 
-	commit, err := clientcommit.CreateCommit(message, username, u.localcpy)
+	commit, err := createCommit(message, username, u.localcpy)
 	if err != nil {
 		return fmt.Errorf("error creating commit:\n%w", err)
 	}
+
+	fmt.Println(commit)
 
 	fmt.Printf("Sending commit %s\n", commit.Md5Hash())
 	err = u.sendCommit(commit)
