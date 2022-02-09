@@ -120,10 +120,12 @@ func (d *Download) DownloadCommit(commitId string) error {
 		return fmt.Errorf("error sending missing blobIds:\n%w", err)
 	}
 
-	fmt.Printf("Requesting missing objects: %d\n", len(missingFilesMap))
+	fmt.Printf("Receiving missing objects: %d\n", len(missingFilesMap))
 	if err := d.receiveBlobs(missingFilesMap); err != nil {
 		return fmt.Errorf("error receiving missing blobs:\n%w", err)
 	}
+
+	fmt.Println("Commit downloaded successfuly!")
 
 	return nil
 }
