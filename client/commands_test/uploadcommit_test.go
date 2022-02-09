@@ -1,6 +1,7 @@
 package commands_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/clientcommit"
@@ -24,6 +25,24 @@ func filesFromMap(fileMap map[string]string) ([]string, []string) {
 		i++
 	}
 	return paths, blobIds
+}
+
+func equalTreeStrings(str1, str2 string) bool {
+	lines1 := strings.Split(str1, "\n")
+	lines2 := strings.Split(str2, "\n")
+
+	for _, line1 := range lines1 {
+		exists := false
+		for _, line2 := range lines2 {
+			if line1 == line2 {
+				exists = true
+			}
+		}
+		if !exists {
+			return false
+		}
+	}
+	return true
 }
 
 const DW_OPCODE = 2
@@ -89,7 +108,7 @@ func TestUploadcommit(t *testing.T) {
 		}
 
 		commitTree := testcase.expectedCommit.GetTree()
-		if actual := commFake.SendStringArgsForCall(3); actual != commitTree {
+		if actual := commFake.SendStringArgsForCall(3); !equalTreeStrings(actual, commitTree) {
 			t.Errorf("Send string called with wrong args when sending commit tree: Expected: %s, actual: %s", commitTree, actual)
 		}
 
