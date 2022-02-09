@@ -16,4 +16,10 @@ type Localcopy interface {
 	SendBlob(filepath string, comm netio.Communicator) error
 }
 
-type Localfiles struct{}
+type Localfiles struct {
+	fileExceptions map[string]struct{}
+}
+
+func NewLocalfiles(fileExceptions map[string]struct{}) *Localfiles {
+	return &Localfiles{fileExceptions: fileExceptions}
+}

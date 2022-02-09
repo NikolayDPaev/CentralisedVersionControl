@@ -81,10 +81,13 @@ func (l *Localfiles) GetPathsOfAllFiles() ([]string, error) {
 		}
 
 		for _, file := range files {
+			path := curDir + "/" + file.Name()
 			if file.IsDir() {
-				stack = append(stack, curDir+"/"+file.Name())
+				stack = append(stack, path)
 			} else {
-				paths = append(paths, curDir+"/"+file.Name())
+				if _, ok := l.fileExceptions[path]; !ok {
+					paths = append(paths, path)
+				}
 			}
 		}
 	}
@@ -132,6 +135,9 @@ func (l *Localfiles) CleanOtherFiles(commitFilesSet map[string]struct{}) error {
 				stack = append(stack, curDir+"/"+file.Name())
 			} else {
 				file := curDir + "/" + file.Name()
+				if _, ok := l.fileExceptions[file]; ok {
+					continue
+				}
 				if err := l.deleteFileIfNotInSet(file, commitFilesSet); err != nil {
 					return err
 				}

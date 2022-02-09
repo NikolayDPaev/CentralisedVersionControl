@@ -86,8 +86,6 @@ func (u *Upload) UploadCommit(message, username string) error {
 		return fmt.Errorf("error creating commit:\n%w", err)
 	}
 
-	fmt.Println(commit)
-
 	fmt.Printf("Sending commit %s\n", commit.Md5Hash())
 	err = u.sendCommit(commit)
 	if err != nil {

@@ -99,8 +99,7 @@ func (l *Localfiles) ReceiveBlob(filepath string, comm netio.Communicator) error
 	if err := comm.RecvFileData(tmp); err != nil {
 		return fmt.Errorf("error receiving blob: %w", err)
 	}
-	tmpInfo, _ := tmp.Stat()
-	fmt.Println(tmpInfo.Size())
+
 	tmp.Seek(0, io.SeekStart)
 
 	if err := l.decompressFile(filepath, tmp); err != nil {
@@ -121,7 +120,7 @@ func (l *Localfiles) SendBlob(filepath string, comm netio.Communicator) error {
 	if err != nil {
 		return fmt.Errorf("error getting blobTmp size: %w", err)
 	}
-	fmt.Println(stat.Size())
+
 	err = comm.SendFileData(tmpFile, stat.Size())
 	if err != nil {
 		return fmt.Errorf("error sending blob: %w", err)

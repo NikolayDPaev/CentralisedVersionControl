@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	METAFILE_NAME = ".cvc"
+	METAFILE_NAME = "./.cvc"
 )
 
 func NewMetaFile() (*os.File, error) {
 	file, err := os.Create(METAFILE_NAME)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create metafile:\n%w", err)
+		return nil, fmt.Errorf("cannot create metafile: %w", err)
 	}
 	return file, nil
 }
@@ -20,7 +20,7 @@ func NewMetaFile() (*os.File, error) {
 func OpenMetaFile() (*os.File, error) {
 	file, err := os.Open(METAFILE_NAME)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open metafile:\n%w", err)
+		return nil, fmt.Errorf("cannot open metafile: %w", err)
 	}
 	return file, nil
 }

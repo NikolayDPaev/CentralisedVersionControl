@@ -81,7 +81,11 @@ func initClient() error {
 		return fmt.Errorf("error reading user input:\n%w", scanner.Err())
 	}
 
-	metafileData := commands.MetafileData{Username: username, Address: address}
+	FileExceptions := make(map[string]struct{}, 2)
+	FileExceptions[fileio.METAFILE_NAME] = struct{}{}
+	FileExceptions[os.Args[0]] = struct{}{}
+
+	metafileData := commands.MetafileData{Username: username, Address: address, FileExceptions: FileExceptions}
 	if err := metafileData.Save(); err != nil {
 		return fmt.Errorf("error initializing:\n%w", scanner.Err())
 	}
@@ -128,7 +132,11 @@ func downloadCommit(args []string) error {
 		return fmt.Errorf("error connecting to server:\n%w", err)
 	}
 	defer c.Close()
-	download := commands.NewDownload(netio.NewCommunicator(CHUNK_SIZE, c, c), &fileio.Localfiles{}, DOWNLOAD_COMMIT, OK)
+	download := commands.NewDownload(
+		netio.NewCommunicator(CHUNK_SIZE, c, c),
+		fileio.NewLocalfiles(metafile.FileExceptions),
+		DOWNLOAD_COMMIT,
+		OK)
 
 	if err := download.DownloadCommit(args[1]); err != nil {
 		if errors.Is(err, commands.ErrInvalidCommitId) {
@@ -151,7 +159,10 @@ func uploadCommit() error {
 		return fmt.Errorf("error connecting to server:\n%w", err)
 	}
 	defer c.Close()
-	upload := commands.NewUpload(netio.NewCommunicator(CHUNK_SIZE, c, c), &fileio.Localfiles{}, UPLOAD_COMMIT)
+	upload := commands.NewUpload(
+		netio.NewCommunicator(CHUNK_SIZE, c, c),
+		fileio.NewLocalfiles(metafile.FileExceptions),
+		UPLOAD_COMMIT)
 
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Enter commit message:")
