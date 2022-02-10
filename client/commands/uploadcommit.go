@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/clientcommit"
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileio"
@@ -24,16 +25,20 @@ func createCommit(message, creator string, localcpy fileio.Localcopy) (*clientco
 		return nil, fmt.Errorf("error getting filenames for creating commit:\n%w", err)
 	}
 
-	fileMap := make(map[string]string, len(paths))
-	for _, path := range paths {
+	fileSortedSlice := make([]clientcommit.CommitEntry, len(paths))
+	for i, path := range paths {
 		hash, err := localcpy.GetHashOfFile(path)
 		if err != nil {
 			return nil, err
 		}
-		fileMap[hash] = path
+		fileSortedSlice[i] = clientcommit.CommitEntry{Hash: hash, Path: path}
 	}
 
-	return &clientcommit.Commit{Message: message, Creator: creator, FileMap: fileMap}, nil
+	sort.Slice(fileSortedSlice, func(i, j int) bool {
+		return fileSortedSlice[i].Hash < fileSortedSlice[j].Hash
+	})
+
+	return &clientcommit.Commit{Message: message, Creator: creator, FileSortedSlice: fileSortedSlice}, nil
 }
 
 func (u *Upload) sendCommit(commit *clientcommit.Commit) error {

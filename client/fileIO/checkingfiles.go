@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 func (l *Localfiles) fileExists(filePath string) (bool, error) {
@@ -36,7 +37,7 @@ func (l *Localfiles) GetHashOfFile(filepath string) (string, error) {
 		return "", fmt.Errorf("error getting hash of %s: %w", filepath, err)
 	}
 	str := base32.StdEncoding.EncodeToString(hash.Sum(nil))
-	return str, nil
+	return strings.ReplaceAll(str, "=", ""), nil
 }
 
 func (l *Localfiles) FileWithHashExists(filepath string, hash string) (bool, error) {

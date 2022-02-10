@@ -1,7 +1,6 @@
 package commands_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/clientcommit"
@@ -15,34 +14,16 @@ type uploadTestCase struct {
 	missingBlobIds []string
 }
 
-func filesFromMap(fileMap map[string]string) ([]string, []string) {
-	paths := make([]string, len(fileMap))
-	blobIds := make([]string, len(fileMap))
+func slicesFromSortedSliceEntries(fileSortedSlice []clientcommit.CommitEntry) ([]string, []string) {
+	paths := make([]string, len(fileSortedSlice))
+	blobIds := make([]string, len(fileSortedSlice))
 	i := 0
-	for k, v := range fileMap {
-		blobIds[i] = k
-		paths[i] = v
+	for _, entry := range fileSortedSlice {
+		blobIds[i] = entry.Hash
+		paths[i] = entry.Path
 		i++
 	}
 	return paths, blobIds
-}
-
-func equalTreeStrings(str1, str2 string) bool {
-	lines1 := strings.Split(str1, "\n")
-	lines2 := strings.Split(str2, "\n")
-
-	for _, line1 := range lines1 {
-		exists := false
-		for _, line2 := range lines2 {
-			if line1 == line2 {
-				exists = true
-			}
-		}
-		if !exists {
-			return false
-		}
-	}
-	return true
 }
 
 const DW_OPCODE = 2
@@ -52,22 +33,22 @@ func TestUploadcommit(t *testing.T) {
 		{clientcommit.Commit{
 			Message: "some message",
 			Creator: "user",
-			FileMap: map[string]string{
-				"123": "a/path/to/file",
-				"456": "another/path/to/other/file",
-				"789": "yet/again/a/path",
-				"234": "i/am/getting/bored"}},
+			FileSortedSlice: []clientcommit.CommitEntry{
+				{Hash: "123", Path: "a/path/to/file"},
+				{Hash: "234", Path: "i/am/getting/bored"},
+				{Hash: "456", Path: "another/path/to/other/file"},
+				{Hash: "789", Path: "yet/again/a/path"}}},
 			[]string{"123", "789"}},
 		{clientcommit.Commit{
-			Message: "empty commit",
-			Creator: "user",
-			FileMap: map[string]string{}},
+			Message:         "empty commit",
+			Creator:         "user",
+			FileSortedSlice: []clientcommit.CommitEntry{}},
 			[]string{}},
 	}
 	for _, testcase := range testcases {
 		commFake := &netiofakes.FakeCommunicator{}
 		fileFake := &fileiofakes.FakeLocalcopy{}
-		paths, blobIds := filesFromMap(testcase.expectedCommit.FileMap)
+		paths, blobIds := slicesFromSortedSliceEntries(testcase.expectedCommit.FileSortedSlice)
 
 		fileFake.GetPathsOfAllFilesReturnsOnCall(0, paths, nil)
 		for i, blob := range blobIds {
@@ -108,7 +89,7 @@ func TestUploadcommit(t *testing.T) {
 		}
 
 		commitTree := testcase.expectedCommit.GetTree()
-		if actual := commFake.SendStringArgsForCall(3); !equalTreeStrings(actual, commitTree) {
+		if actual := commFake.SendStringArgsForCall(3); actual != commitTree {
 			t.Errorf("Send string called with wrong args when sending commit tree: Expected: %s, actual: %s", commitTree, actual)
 		}
 
@@ -117,8 +98,9 @@ func TestUploadcommit(t *testing.T) {
 			if actual := commFake.SendStringArgsForCall(4 + i); actual != blobId {
 				t.Errorf("Send string called with wrong args when sending blob id: Expected: %s, actual: %s", blobId, actual)
 			}
-			if actual, _ := fileFake.SendBlobArgsForCall(i); actual != testcase.expectedCommit.FileMap[blobId] {
-				t.Errorf("Send string called with wrong args when sending blob id: Expected: %s, actual: %s", testcase.expectedCommit.FileMap[blobId], actual)
+			expectedPath, _ := testcase.expectedCommit.GetBlobPath(blobId)
+			if actual, _ := fileFake.SendBlobArgsForCall(i); actual != expectedPath {
+				t.Errorf("Send string called with wrong args when sending blob id: Expected: %s, actual: %s", expectedPath, actual)
 			}
 		}
 

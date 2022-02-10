@@ -25,30 +25,30 @@ func NewDownload(comm netio.Communicator, localcpy fileio.Localcopy, opcode, okc
 func ReadCommit(id string, comm netio.Communicator) (*clientcommit.Commit, error) {
 	receivedId, err := comm.RecvString()
 	if err != nil || id != receivedId {
-		return nil, fmt.Errorf("error receiving id of commit:\n%w", err)
+		return nil, fmt.Errorf("error receiving id of commit: %w", err)
 	}
 
 	message, err := comm.RecvString()
 	if err != nil {
-		return nil, fmt.Errorf("cannot read message string of commit:\n%w", err)
+		return nil, fmt.Errorf("cannot read message string of commit: %w", err)
 	}
 
 	creator, err := comm.RecvString()
 	if err != nil {
-		return nil, fmt.Errorf("cannot read creator string of commit:\n%w", err)
+		return nil, fmt.Errorf("cannot read creator string of commit: %w", err)
 	}
 
 	strTree, err := comm.RecvString()
 	if err != nil {
-		return nil, fmt.Errorf("cannot read tree string of commit:\n%w", err)
+		return nil, fmt.Errorf("cannot read tree string of commit: %w", err)
 	}
 
-	fileMap, err := clientcommit.GetMap(strTree)
+	fileSortedSlice, err := clientcommit.GetSortedSlice(strTree)
 	if err != nil {
 		return nil, err
 	}
+	commit := &clientcommit.Commit{Message: message, Creator: creator, FileSortedSlice: fileSortedSlice}
 
-	commit := &clientcommit.Commit{Message: message, Creator: creator, FileMap: fileMap}
 	commitHash := commit.Md5Hash()
 	if id != commitHash {
 		return nil, fmt.Errorf("mismatched hash values: expected: %s, actual: %s", id, commitHash)
@@ -58,12 +58,12 @@ func ReadCommit(id string, comm netio.Communicator) (*clientcommit.Commit, error
 
 func (d *Download) receiveCommit(commitId string) (*clientcommit.Commit, error) {
 	if err := d.comm.SendString(commitId); err != nil {
-		return nil, fmt.Errorf("error sending commit ID:\n%w", err)
+		return nil, fmt.Errorf("error sending commit ID: %w", err)
 	}
 
 	code, err := d.comm.RecvVarInt()
 	if err != nil {
-		return nil, fmt.Errorf("error no such commit on server:\n%w", err)
+		return nil, fmt.Errorf("error no such commit on server: %w", err)
 	}
 	if code != int64(d.okcode) {
 		return nil, ErrInvalidCommitId
@@ -73,7 +73,7 @@ func (d *Download) receiveCommit(commitId string) (*clientcommit.Commit, error) 
 
 	commit, err := ReadCommit(commitId, d.comm)
 	if err != nil {
-		return nil, fmt.Errorf("error receiving commit:\n%w", err)
+		return nil, fmt.Errorf("error receiving commit: %w", err)
 	}
 	return commit, nil
 }
@@ -82,7 +82,7 @@ func (d *Download) receiveBlobs(missingFilesMap map[string]string) error {
 	for range missingFilesMap {
 		blobId, err := d.comm.RecvString()
 		if err != nil {
-			return fmt.Errorf("error receiving blobId:\n%w", err)
+			return fmt.Errorf("error receiving blobId: %w", err)
 		}
 		fileName := missingFilesMap[blobId]
 		d.localcpy.ReceiveBlob(fileName, d.comm)
@@ -92,7 +92,7 @@ func (d *Download) receiveBlobs(missingFilesMap map[string]string) error {
 
 func (d *Download) DownloadCommit(commitId string) error {
 	if err := d.comm.SendVarInt(int64(d.opcode)); err != nil {
-		return fmt.Errorf("cannot send opcode:\n%w", err)
+		return fmt.Errorf("cannot send opcode: %w", err)
 	}
 
 	fmt.Printf("Requesting commit %s\n", commitId)
@@ -102,12 +102,12 @@ func (d *Download) DownloadCommit(commitId string) error {
 	}
 
 	if err := d.localcpy.CleanOtherFiles(commit.GetSetOfPaths()); err != nil {
-		return fmt.Errorf("error cleaning other files:\n%w", err)
+		return fmt.Errorf("error cleaning other files: %w", err)
 	}
 
 	missingFilesMap, err := commit.GetMissingFiles(d.localcpy)
 	if err != nil {
-		return fmt.Errorf("error getting missing files from commit:\n%w", err)
+		return fmt.Errorf("error getting missing files from commit: %w", err)
 	}
 
 	var missingBlobIds []string
@@ -117,12 +117,12 @@ func (d *Download) DownloadCommit(commitId string) error {
 
 	fmt.Printf("Requesting missing files\n")
 	if err := d.comm.SendStringSlice(missingBlobIds); err != nil {
-		return fmt.Errorf("error sending missing blobIds:\n%w", err)
+		return fmt.Errorf("error sending missing blobIds: %w", err)
 	}
 
 	fmt.Printf("Receiving missing objects: %d\n", len(missingFilesMap))
 	if err := d.receiveBlobs(missingFilesMap); err != nil {
-		return fmt.Errorf("error receiving missing blobs:\n%w", err)
+		return fmt.Errorf("error receiving missing blobs: %w", err)
 	}
 
 	fmt.Println("Commit downloaded successfuly!")

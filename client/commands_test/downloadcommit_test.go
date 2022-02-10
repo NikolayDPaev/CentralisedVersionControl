@@ -56,8 +56,8 @@ func TestDownloadcommit(t *testing.T) {
 			[]string{}},
 	}
 	for _, testCase := range testCases {
-		filesMap, _ := clientcommit.GetMap(testCase.tree)
-		testCommit := &clientcommit.Commit{Message: testCase.message, Creator: testCase.creator, FileMap: filesMap}
+		fileSortedSlice, _ := clientcommit.GetSortedSlice(testCase.tree)
+		testCommit := &clientcommit.Commit{Message: testCase.message, Creator: testCase.creator, FileSortedSlice: fileSortedSlice}
 		testCommitId := testCommit.Md5Hash()
 
 		commFake := &netiofakes.FakeCommunicator{}
