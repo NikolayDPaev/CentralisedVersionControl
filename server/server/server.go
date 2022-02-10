@@ -56,10 +56,15 @@ func handleClient(c net.Conn, wg *sync.WaitGroup) {
 	defer wg.Done()
 	comm := netio.NewCommunicator(CHUNK_SIZE, c, c)
 	clientHandler, err := clienthandler.NewHandler(comm, &storage.FileStorage{})
+
+	if clientHandler == nil {
+		return
+	}
 	if err != nil {
 		log.Println(err)
 		return
 	}
+
 	err = clientHandler.Handle()
 	if err != nil {
 		log.Println(err)
