@@ -1,3 +1,4 @@
+// Package client provides the user interface to the client app
 package client
 
 import (
@@ -10,6 +11,7 @@ import (
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/commands"
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileio"
+	"github.com/NikolayDPaev/CentralisedVersionControl/client/metadata"
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
@@ -24,6 +26,12 @@ const (
 
 var errInvalidCommand = errors.New("invalid command")
 
+const METAFILE_NAME = "./.cvc"
+
+// Entry function that receives the user args with which the app is called.
+// It invokes the different commands based on the args provided.
+// The function excepts args slice starting from the first argument
+// (the zeroth - the name of the binary should be omitted - ReadArgs(os.Args[1:])).
 func ReadArgs(args []string) {
 	if len(args) < 1 {
 		fmt.Println("Usage: csv <command>")
@@ -57,6 +65,7 @@ func ReadArgs(args []string) {
 	}
 }
 
+// Prints the help menu.
 func help() {
 	fmt.Println("Usage: csv <command>")
 	fmt.Println("Commands:")
@@ -67,6 +76,8 @@ func help() {
 	fmt.Println("help - prints this text")
 }
 
+// Initializes the client.
+// Creates the metafile that stores username, remote address and file exceptions.
 func initClient() error {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Enter username:")
@@ -78,36 +89,39 @@ func initClient() error {
 	address := scanner.Text()
 
 	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("error reading user input:\n%w", scanner.Err())
+		return fmt.Errorf("error reading user input: %w", scanner.Err())
 	}
 
 	FileExceptions := make(map[string]struct{}, 2)
-	FileExceptions[fileio.METAFILE_NAME] = struct{}{}
+	FileExceptions[METAFILE_NAME] = struct{}{}
 	FileExceptions[os.Args[0]] = struct{}{}
 
-	metafileData := commands.MetafileData{Username: username, Address: address, FileExceptions: FileExceptions}
-	if err := metafileData.Save(); err != nil {
-		return fmt.Errorf("error initializing:\n%w", scanner.Err())
+	metafileData := &metadata.MetafileData{Username: username, Address: address, FileExceptions: FileExceptions}
+	if err := metadata.Save(metafileData, METAFILE_NAME); err != nil {
+		return fmt.Errorf("error initializing: %w", scanner.Err())
 	}
 	return nil
 }
 
+// Attempts to make request for the commit list of the server
+// by invoking the GetCommitlist method of the struct CommitList in commands package
+// If successful - prints it.
 func commitList() error {
-	metafile, err := commands.ReadMetafileData()
+	metafile, err := metadata.ReadMetafileData(METAFILE_NAME)
 	if err != nil {
 		return err
 	}
 
 	c, err := net.Dial("tcp", metafile.Address)
 	if err != nil {
-		return fmt.Errorf("error connecting to server:\n%w", err)
+		return fmt.Errorf("error connecting to server: %w", err)
 	}
 	defer c.Close()
 
 	commitList := commands.NewCommitList(netio.NewCommunicator(CHUNK_SIZE, c, c), GET_COMMIT_LIST)
 	slice, err := commitList.GetCommitList()
 	if err != nil {
-		return fmt.Errorf("cannot execute commit list operation:\n%w", err)
+		return fmt.Errorf("cannot execute commit list operation: %w", err)
 	}
 
 	fmt.Println("Commits on server:")
@@ -118,11 +132,13 @@ func commitList() error {
 	return nil
 }
 
+// Request a commit from the server by invoking
+// the Download commit method of the struct Download in commands package
 func downloadCommit(args []string) error {
 	if len(args) != 2 {
 		return errInvalidCommand
 	}
-	metafile, err := commands.ReadMetafileData()
+	metafile, err := metadata.ReadMetafileData(METAFILE_NAME)
 	if err != nil {
 		return err
 	}
@@ -148,8 +164,10 @@ func downloadCommit(args []string) error {
 	return nil
 }
 
+// Attempts to add the current files as a commit and to send them to the server.
+// Invokes the UploadCommit methods of Upload struct in commands package.
 func uploadCommit() error {
-	metafile, err := commands.ReadMetafileData()
+	metafile, err := metadata.ReadMetafileData(METAFILE_NAME)
 	if err != nil {
 		return err
 	}

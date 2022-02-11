@@ -1,11 +1,11 @@
-package commands
+package metadata
 
 import (
 	"bufio"
 	"errors"
-	"fmt"
-	"os"
 )
+
+var ErrMissingMetafile = errors.New("cannot open .cvc file")
 
 // Struct that represents the data of the metafile
 type MetafileData struct {
@@ -14,14 +14,10 @@ type MetafileData struct {
 	FileExceptions map[string]struct{}
 }
 
-const METAFILE_NAME = "./.cvc"
-
-var ErrMissingMetafile = errors.New("cannot open .cvc file")
-
 // Tries to open the metafile to read it.
 // Returns metafileData struct.
-func ReadMetafileData() (*MetafileData, error) {
-	file, err := openMetaFile()
+func ReadMetafileData(metafileName string) (*MetafileData, error) {
+	file, err := openMetaFile(metafileName)
 	if err != nil {
 		return nil, ErrMissingMetafile
 	}
@@ -50,29 +46,9 @@ func ReadMetafileData() (*MetafileData, error) {
 	return &MetafileData{Username: username, Address: address, FileExceptions: exceptions}, nil
 }
 
-// Creates metafile and returns descriptor.
-// Caller must close it.
-func newMetaFile() (*os.File, error) {
-	file, err := os.Create(METAFILE_NAME)
-	if err != nil {
-		return nil, fmt.Errorf("cannot create metafile: %w", err)
-	}
-	return file, nil
-}
-
-// Opens metafile and returns descriptor.
-// Caller must close it.
-func openMetaFile() (*os.File, error) {
-	file, err := os.Open(METAFILE_NAME)
-	if err != nil {
-		return nil, fmt.Errorf("cannot open metafile: %w", err)
-	}
-	return file, nil
-}
-
-// Saves the metadata struct to a new metadata file
-func (m *MetafileData) Save() error {
-	file, err := newMetaFile()
+// Saves the metadata struct to a new metafile
+func Save(data *MetafileData, metafileName string) error {
+	file, err := newMetaFile(metafileName)
 	if err != nil {
 		return err
 	}
@@ -80,11 +56,11 @@ func (m *MetafileData) Save() error {
 
 	bufWriter := bufio.NewWriter(file)
 	defer bufWriter.Flush()
-	bufWriter.WriteString(m.Username)
+	bufWriter.WriteString(data.Username)
 	bufWriter.WriteRune('\n')
-	bufWriter.WriteString(m.Address)
+	bufWriter.WriteString(data.Address)
 	bufWriter.WriteRune('\n')
-	for files := range m.FileExceptions {
+	for files := range data.FileExceptions {
 		bufWriter.WriteString(files)
 		bufWriter.WriteRune('\n')
 	}

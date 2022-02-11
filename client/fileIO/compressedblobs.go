@@ -15,6 +15,9 @@ const (
 	CHUNK_SIZE = 4096
 )
 
+// Compresses the provided file to new temporary file.
+// Returns descriptor of the temp file and it is caller responsibiliy to close it.
+// Uses gzip for the compresion.
 func (l *Localfiles) compressToTempFile(source string) (*os.File, error) {
 	sFile, err := os.Open(source)
 	if err != nil {
@@ -48,6 +51,7 @@ func (l *Localfiles) compressToTempFile(source string) (*os.File, error) {
 	return dFile, nil
 }
 
+// Creates the directories leading to the file in the filepath
 func (l *Localfiles) createDirectoriesInPath(dest string) error {
 	if err := os.MkdirAll(filepath.Dir(dest), 0777); err != nil {
 		return fmt.Errorf("cannot create path: %w", err)
@@ -55,6 +59,7 @@ func (l *Localfiles) createDirectoriesInPath(dest string) error {
 	return nil
 }
 
+// Decompresses the provided file descriptor to a new file with the provided path.
 func (l *Localfiles) decompressFile(dest string, sFile *os.File) error {
 	if err := l.createDirectoriesInPath(dest); err != nil {
 		return fmt.Errorf("error creating file directory: %w", err)
@@ -89,6 +94,9 @@ func (l *Localfiles) decompressFile(dest string, sFile *os.File) error {
 	return nil
 }
 
+// Encapsulates the logic behind receiving blob.
+// Receives it to a temporary file then decompresses it to a new file
+//  with the specified path.
 func (l *Localfiles) ReceiveBlob(filepath string, comm netio.Communicator) error {
 	tmp, err := os.CreateTemp("", "blobTmp")
 	if err != nil {
@@ -109,6 +117,9 @@ func (l *Localfiles) ReceiveBlob(filepath string, comm netio.Communicator) error
 	return nil
 }
 
+// Encapsulates the logic behind sending blob.
+// Compresses the file with the provided path to a temporary file
+// then proceeds to send it via the Communicator interface.
 func (l *Localfiles) SendBlob(filepath string, comm netio.Communicator) error {
 	tmpFile, err := l.compressToTempFile(filepath)
 	if err != nil {

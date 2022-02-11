@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// Predicate that checks if the filepath is valid file
 func (l *Localfiles) fileExists(filePath string) (bool, error) {
 	if _, err := os.Stat(filePath); err == nil {
 		return true, nil
@@ -23,6 +24,7 @@ func (l *Localfiles) fileExists(filePath string) (bool, error) {
 	}
 }
 
+// Returns Md5Sum of the file on the provided filepath
 func (l *Localfiles) GetHashOfFile(filepath string) (string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -40,6 +42,7 @@ func (l *Localfiles) GetHashOfFile(filepath string) (string, error) {
 	return strings.ReplaceAll(str, "=", ""), nil
 }
 
+// Checks if the filepath leads to a file with the specific hash.
 func (l *Localfiles) FileWithHashExists(filepath string, hash string) (bool, error) {
 	fileExists, err := l.fileExists(filepath)
 	if err != nil {
@@ -57,6 +60,7 @@ func (l *Localfiles) FileWithHashExists(filepath string, hash string) (bool, err
 	return hash == realHash, nil
 }
 
+// Turns to the os package to get the size of the file
 func (l *Localfiles) FileSize(path string) (int64, error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
@@ -66,11 +70,14 @@ func (l *Localfiles) FileSize(path string) (int64, error) {
 	return fileInfo.Size(), nil
 }
 
+// Returns slice with paths to all files in all directories.
+// Skips files which paths are in the FileExceptions set.
+// Uses the DFS algorithm.
 func (l *Localfiles) GetPathsOfAllFiles() ([]string, error) {
 	var paths []string
 	var stack []string
 
-	stack = append(stack, ".") // windows?
+	stack = append(stack, ".")
 	for len(stack) > 0 {
 		n := len(stack) - 1
 		curDir := stack[n] // top
@@ -118,6 +125,9 @@ func (l *Localfiles) deleteFileIfNotInSet(file string, filesSet map[string]struc
 	return nil
 }
 
+// Deletes all files that are not present in both the provided set and fileException set.
+// Invokes deleteFileIfNotInSet on all files using DFS algorithm.
+// If directory is empty after the operation invokes removeDirIfEmpty method.
 func (l *Localfiles) CleanOtherFiles(commitFilesSet map[string]struct{}) error {
 	var stack []string
 	stack = append(stack, ".")

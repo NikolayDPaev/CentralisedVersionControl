@@ -6,6 +6,7 @@ import (
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Localcopy
 
+// Interface that provides all operations with the local files
 type Localcopy interface {
 	GetHashOfFile(filepath string) (string, error)
 	GetPathsOfAllFiles() ([]string, error)
@@ -16,6 +17,9 @@ type Localcopy interface {
 	SendBlob(filepath string, comm netio.Communicator) error
 }
 
+// Implementation of the Localcopy interface
+// Contains fileExceptions field that marks all files that should not be
+// included in commits or deleted
 type Localfiles struct {
 	fileExceptions map[string]struct{}
 }

@@ -20,7 +20,7 @@ func TestGetCommitList(t *testing.T) {
 		t.Errorf("Commitlist returned wrong string. Expected: %s, actual: %s", expectedSlice, actualSlice)
 	}
 
-	if count := fakeComm.SendVarIntCallCount(); count != 2 {
+	if count := fakeComm.SendVarIntCallCount(); count != 1 {
 		t.Errorf("SendVarInt different call count. Expected: %d, actual: %d", 2, count)
 	}
 

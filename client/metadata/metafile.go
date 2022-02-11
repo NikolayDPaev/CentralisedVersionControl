@@ -1,24 +1,20 @@
-package fileio
+package metadata
 
 import (
 	"fmt"
 	"os"
 )
 
-const (
-	METAFILE_NAME = "./.cvc"
-)
-
-func NewMetaFile() (*os.File, error) {
-	file, err := os.Create(METAFILE_NAME)
+func newMetaFile(metafileName string) (*os.File, error) {
+	file, err := os.Create(metafileName)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create metafile: %w", err)
 	}
 	return file, nil
 }
 
-func OpenMetaFile() (*os.File, error) {
-	file, err := os.Open(METAFILE_NAME)
+func openMetaFile(metafileName string) (*os.File, error) {
+	file, err := os.Open(metafileName)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open metafile: %w", err)
 	}
