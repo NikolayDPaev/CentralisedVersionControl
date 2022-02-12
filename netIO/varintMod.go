@@ -2,18 +2,13 @@ package netio
 
 // Modified code from the binary package
 // the function modified is ReadUvarint, it was made to work with io.Reader instead of io.ByteReader
-// because bytereader caches some bytes that causes problems
-
+// because bytereader caches some bytes and that causes problems with consecutive reads.
 import (
 	"errors"
 	"io"
 )
 
-const (
-	MaxVarintLen16 = 3
-	MaxVarintLen32 = 5
-	MaxVarintLen64 = 10
-)
+const MaxVarintLen64 = 10
 
 var errOverflow = errors.New("binary: varint overflows a 64-bit integer")
 

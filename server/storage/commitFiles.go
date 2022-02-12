@@ -64,7 +64,7 @@ func (s *FileStorage) OpenCommit(commitId string) (*servercommit.Commit, error) 
 	if err != nil {
 		return nil, fmt.Errorf("cannot open commit %s: %w", commitId, err)
 	}
-	fileComm := netio.NewCommunicator(0, file, file)
+	fileComm := netio.NewCommunication(netio.DEF_CHUNK_SIZE, file, file)
 	return servercommit.NewCommitFrom(commitId, fileComm)
 }
 
@@ -80,7 +80,7 @@ func (s *FileStorage) SaveCommit(commit *servercommit.Commit) error {
 	}
 	defer file.Close()
 
-	comm := netio.NewCommunicator(100, file, file)
+	comm := netio.NewCommunication(netio.DEF_CHUNK_SIZE, file, file)
 	if err := commit.WriteTo(comm); err != nil {
 		return fmt.Errorf("error saving commit %s: %w", commit.String(), err)
 	}

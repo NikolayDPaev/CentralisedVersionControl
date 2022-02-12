@@ -34,7 +34,7 @@ const METAFILE_NAME = "./.cvc"
 // (the zeroth - the name of the binary should be omitted - ReadArgs(os.Args[1:])).
 func ReadArgs(args []string) {
 	if len(args) < 1 {
-		fmt.Println("Usage: csv <command>")
+		fmt.Println("Usage: cvc <command>")
 		return
 	}
 
@@ -55,10 +55,10 @@ func ReadArgs(args []string) {
 	}
 
 	if err != nil {
-		if errors.Is(err, commands.ErrMissingMetafile) {
-			fmt.Println("Cannot find .cvc file! Please run command csv init.")
+		if errors.Is(err, metadata.ErrMissingMetafile) {
+			fmt.Println("Cannot find .cvc file! Please run command cvc init.")
 		} else if errors.Is(err, errInvalidCommand) {
-			fmt.Println("Incorrect command. For list of commands run \"csv help\".")
+			fmt.Println("Incorrect command. For list of commands run \"cvc help\".")
 		} else {
 			log.Println(err)
 		}
@@ -67,12 +67,12 @@ func ReadArgs(args []string) {
 
 // Prints the help menu.
 func help() {
-	fmt.Println("Usage: csv <command>")
+	fmt.Println("Usage: cvc <command>")
 	fmt.Println("Commands:")
 	fmt.Println("init - initialization of workplace in the current directory")
 	fmt.Println("list - listing of the available commits")
 	fmt.Println("pull <commitId> - downloading commit to the workplace")
-	fmt.Println("push - commiting the current state of the workplace ")
+	fmt.Println("push - committing the current state of the workplace ")
 	fmt.Println("help - prints this text")
 }
 
@@ -92,33 +92,43 @@ func initClient() error {
 		return fmt.Errorf("error reading user input: %w", scanner.Err())
 	}
 
-	FileExceptions := make(map[string]struct{}, 2)
-	FileExceptions[METAFILE_NAME] = struct{}{}
-	FileExceptions[os.Args[0]] = struct{}{}
+	IgnoredFiles := make(map[string]struct{}, 2)
+	IgnoredFiles[METAFILE_NAME] = struct{}{}
+	IgnoredFiles[os.Args[0]] = struct{}{}
 
-	metafileData := &metadata.MetafileData{Username: username, Address: address, FileExceptions: FileExceptions}
+	metafileData := &metadata.MetafileData{Username: username, Address: address, IgnoredFiles: IgnoredFiles}
 	if err := metadata.Save(metafileData, METAFILE_NAME); err != nil {
 		return fmt.Errorf("error initializing: %w", scanner.Err())
 	}
 	return nil
 }
 
-// Attempts to make request for the commit list of the server
-// by invoking the GetCommitlist method of the struct CommitList in commands package
-// If successful - prints it.
-func commitList() error {
+// Reads metafile and connects to the server.
+// Returns error if any of the two operation fails.
+func prepCommunication() (*metadata.MetafileData, net.Conn, error) {
 	metafile, err := metadata.ReadMetafileData(METAFILE_NAME)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	c, err := net.Dial("tcp", metafile.Address)
 	if err != nil {
-		return fmt.Errorf("error connecting to server: %w", err)
+		return nil, nil, fmt.Errorf("error connecting to server: %w", err)
 	}
-	defer c.Close()
+	return metafile, c, nil
+}
 
-	commitList := commands.NewCommitList(netio.NewCommunicator(CHUNK_SIZE, c, c), GET_COMMIT_LIST)
+// Attempts to make request for the commit list of the server
+// by invoking the GetCommitlist method of the struct CommitList in commands package
+// If successful - prints it.
+func commitList() error {
+	_, comm, err := prepCommunication()
+	if err != nil {
+		return err
+	}
+	defer comm.Close()
+
+	commitList := commands.NewCommitList(netio.NewCommunication(CHUNK_SIZE, comm, comm), GET_COMMIT_LIST)
 	slice, err := commitList.GetCommitList()
 	if err != nil {
 		return fmt.Errorf("cannot execute commit list operation: %w", err)
@@ -138,19 +148,15 @@ func downloadCommit(args []string) error {
 	if len(args) != 2 {
 		return errInvalidCommand
 	}
-	metafile, err := metadata.ReadMetafileData(METAFILE_NAME)
+	metafile, comm, err := prepCommunication()
 	if err != nil {
 		return err
 	}
+	defer comm.Close()
 
-	c, err := net.Dial("tcp", metafile.Address)
-	if err != nil {
-		return fmt.Errorf("error connecting to server:\n%w", err)
-	}
-	defer c.Close()
 	download := commands.NewDownload(
-		netio.NewCommunicator(CHUNK_SIZE, c, c),
-		fileio.NewLocalfiles(metafile.FileExceptions),
+		netio.NewCommunication(CHUNK_SIZE, comm, comm),
+		fileio.NewLocalfiles(metafile.IgnoredFiles),
 		DOWNLOAD_COMMIT,
 		OK)
 
@@ -158,7 +164,7 @@ func downloadCommit(args []string) error {
 		if errors.Is(err, commands.ErrInvalidCommitId) {
 			fmt.Println("Invalid commit Id")
 		} else {
-			return fmt.Errorf("cannot execute download commit operation:\n%w", err)
+			return fmt.Errorf("cannot execute download commit operation: %w", err)
 		}
 	}
 	return nil
@@ -167,19 +173,15 @@ func downloadCommit(args []string) error {
 // Attempts to add the current files as a commit and to send them to the server.
 // Invokes the UploadCommit methods of Upload struct in commands package.
 func uploadCommit() error {
-	metafile, err := metadata.ReadMetafileData(METAFILE_NAME)
+	metafile, comm, err := prepCommunication()
 	if err != nil {
 		return err
 	}
+	defer comm.Close()
 
-	c, err := net.Dial("tcp", metafile.Address)
-	if err != nil {
-		return fmt.Errorf("error connecting to server:\n%w", err)
-	}
-	defer c.Close()
 	upload := commands.NewUpload(
-		netio.NewCommunicator(CHUNK_SIZE, c, c),
-		fileio.NewLocalfiles(metafile.FileExceptions),
+		netio.NewCommunication(CHUNK_SIZE, comm, comm),
+		fileio.NewLocalfiles(metafile.IgnoredFiles),
 		UPLOAD_COMMIT)
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -189,7 +191,7 @@ func uploadCommit() error {
 
 	err = upload.UploadCommit(message, metafile.Username)
 	if err != nil {
-		return fmt.Errorf("error uploading commit:\n%w", err)
+		return fmt.Errorf("error uploading commit: %w", err)
 	}
 	fmt.Println("Commit uploaded successfuly!")
 	return nil

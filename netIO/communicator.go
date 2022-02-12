@@ -4,6 +4,7 @@ import "io"
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Communicator
 
+// Interface that defines methods for sending and receiving various data
 type Communicator interface {
 	SendVarInt(num int64) error
 	RecvVarInt() (int64, error)

@@ -93,7 +93,7 @@ func (l *Localfiles) GetPathsOfAllFiles() ([]string, error) {
 			if file.IsDir() {
 				stack = append(stack, path)
 			} else {
-				if _, ok := l.fileExceptions[path]; !ok {
+				if _, ok := l.ignoredFiles[path]; !ok {
 					paths = append(paths, path)
 				}
 			}
@@ -146,7 +146,7 @@ func (l *Localfiles) CleanOtherFiles(commitFilesSet map[string]struct{}) error {
 				stack = append(stack, curDir+"/"+file.Name())
 			} else {
 				file := curDir + "/" + file.Name()
-				if _, ok := l.fileExceptions[file]; ok {
+				if _, ok := l.ignoredFiles[file]; ok {
 					continue
 				}
 				if err := l.deleteFileIfNotInSet(file, commitFilesSet); err != nil {

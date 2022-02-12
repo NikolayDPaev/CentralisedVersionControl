@@ -49,7 +49,7 @@ func (s *Server) sendEmptyRequest() error {
 	}
 	defer c.Close()
 
-	comm := netio.NewCommunicator(CHUNK_SIZE, c, c)
+	comm := netio.NewCommunication(CHUNK_SIZE, c, c)
 	if err := comm.SendVarInt(clienthandler.EMPTY_REQUEST); err != nil {
 		return fmt.Errorf("error sending empty request:\n%w", err)
 	}
@@ -62,7 +62,7 @@ func (s *Server) sendEmptyRequest() error {
 func handleClient(c net.Conn, wg *sync.WaitGroup) {
 	defer c.Close()
 	defer wg.Done()
-	comm := netio.NewCommunicator(CHUNK_SIZE, c, c)
+	comm := netio.NewCommunication(CHUNK_SIZE, c, c)
 	clientHandler, err := clienthandler.NewHandler(comm, &storage.FileStorage{})
 
 	if clientHandler == nil {
