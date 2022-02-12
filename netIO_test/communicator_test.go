@@ -10,7 +10,7 @@ import (
 
 func TestSendVarInt(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netio.NewCommunicator(100, b, b)
+	c := netio.NewCommunication(100, b, b)
 
 	values := []int64{
 		1,
@@ -34,7 +34,7 @@ func TestSendVarInt(t *testing.T) {
 
 func TestSendString(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netio.NewCommunicator(100, b, b)
+	c := netio.NewCommunication(100, b, b)
 
 	values := []string{
 		"",
@@ -58,7 +58,7 @@ func TestSendString(t *testing.T) {
 
 func TestRecvString(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netio.NewCommunicator(100, b, b)
+	c := netio.NewCommunication(100, b, b)
 
 	values := []string{
 		"",
@@ -81,7 +81,7 @@ func TestRecvString(t *testing.T) {
 
 func TestSendStringSlice(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netio.NewCommunicator(100, b, b)
+	c := netio.NewCommunication(100, b, b)
 
 	values := [][]string{
 		{},
@@ -106,7 +106,7 @@ func TestSendStringSlice(t *testing.T) {
 
 func TestRecvStringSlice(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netio.NewCommunicator(100, b, b)
+	c := netio.NewCommunication(100, b, b)
 
 	values := [][]string{
 		{},
@@ -129,7 +129,7 @@ func TestRecvStringSlice(t *testing.T) {
 
 func TestSendFileData(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netio.NewCommunicator(5, b, b)
+	c := netio.NewCommunication(5, b, b)
 
 	values := [][]byte{
 		[]byte(""),
@@ -155,7 +155,7 @@ func TestSendFileData(t *testing.T) {
 
 func TestRecvFileData(t *testing.T) {
 	b := new(bytes.Buffer)
-	c := netio.NewCommunicator(5, b, b)
+	c := netio.NewCommunication(5, b, b)
 
 	values := [][]byte{
 		[]byte(""),
