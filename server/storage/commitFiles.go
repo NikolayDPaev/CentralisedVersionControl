@@ -11,6 +11,7 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
 )
 
+// Predicate that checks if file with the specified filePath exists.
 func fileExists(filePath string) (bool, error) {
 	if _, err := os.Stat(filePath); err == nil {
 		return true, nil
@@ -23,6 +24,8 @@ func fileExists(filePath string) (bool, error) {
 	}
 }
 
+// Returns a slice with the string representation of all commits on the disk,
+// sorted in the order of creation.
 func (s *FileStorage) CommitList() []string {
 	f, err := os.Open("./commits")
 	if err != nil {
@@ -55,23 +58,25 @@ func (s *FileStorage) CommitList() []string {
 	return result
 }
 
+// Deserializes a new commit with this commit id from the disk.
 func (s *FileStorage) OpenCommit(commitId string) (*servercommit.Commit, error) {
 	file, err := os.Open("commits/" + commitId)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open commit %s:\n%w", commitId, err)
+		return nil, fmt.Errorf("cannot open commit %s: %w", commitId, err)
 	}
 	fileComm := netio.NewCommunicator(0, file, file)
 	return servercommit.NewCommitFrom(commitId, fileComm)
 }
 
+// Serializes the provided commit record to the disk.
 func (s *FileStorage) SaveCommit(commit *servercommit.Commit) error {
 	if err := os.MkdirAll("commits", 0777); err != nil {
-		return fmt.Errorf("cannot create commit folder:\n%w", err)
+		return fmt.Errorf("cannot create commit folder: %w", err)
 	}
 
 	file, err := os.Create("commits/" + commit.Id)
 	if err != nil {
-		return fmt.Errorf("cannot create commit file %s:\n%w", commit.Id, err)
+		return fmt.Errorf("cannot create commit file %s: %w", commit.Id, err)
 	}
 	defer file.Close()
 
@@ -82,15 +87,17 @@ func (s *FileStorage) SaveCommit(commit *servercommit.Commit) error {
 	return nil
 }
 
+// Returns the size of the commit file on the disk.
 func (s *FileStorage) CommitSize(commitId string) (int64, error) {
 	fileInfo, err := os.Stat("commits/" + commitId)
 	if err != nil {
-		return 0, fmt.Errorf("cannot get commit %s file info:\n%w", commitId, err)
+		return 0, fmt.Errorf("cannot get commit %s file info: %w", commitId, err)
 	}
 
 	return fileInfo.Size(), nil
 }
 
+// Predicate that checks if there is a commit with the specified commit id on the disk.
 func (s *FileStorage) CommitExists(commitId string) (bool, error) {
 	b, err := fileExists("commits/" + commitId)
 	if err != nil {

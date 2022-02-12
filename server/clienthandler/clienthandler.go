@@ -1,3 +1,4 @@
+// Defines the operations that the server provides
 package clienthandler
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
 )
 
+// Operation codes
 const (
 	GET_COMMIT_LIST = 0
 	DOWNLOAD_COMMIT = 1
@@ -18,6 +20,7 @@ type Clienthandler interface {
 	Handle() error
 }
 
+// Returns clienthandler implementation based on the opcode received from the client
 func NewHandler(comm netio.Communicator, storage storage.Storage) (Clienthandler, error) {
 	opCode, err := comm.RecvVarInt()
 	if err != nil {

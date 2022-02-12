@@ -8,6 +8,7 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
 )
 
+// Implements the receive commit operation.
 type ReceiveCommit struct {
 	comm    netio.Communicator
 	storage storage.Storage
@@ -17,9 +18,10 @@ func NewReceiveCommit(comm netio.Communicator, storage storage.Storage) *Receive
 	return &ReceiveCommit{comm, storage}
 }
 
+// Returns slice with the blob ids from the commit that are missing on the server and
+// must be requested or error if BLobExists fails
 func (r *ReceiveCommit) getMissingBlobIds(commit *servercommit.Commit) ([]string, error) {
 	commitBlobIds := commit.ExtractBlobIds()
-	//missingBlobIds := make([]string, len(commitBlobIds)/2)
 	var missingBlobIds []string
 
 	for _, blobId := range commitBlobIds {
@@ -35,12 +37,13 @@ func (r *ReceiveCommit) getMissingBlobIds(commit *servercommit.Commit) ([]string
 	return missingBlobIds, nil
 }
 
+// Receives a blob from the client and saves it on the storage
 func (r *ReceiveCommit) receiveBlob() error {
 	blobId, err := r.comm.RecvString()
 	if err != nil {
 		return fmt.Errorf("error receiving blobId: %w", err)
 	}
-	err = r.storage.SaveBlob(blobId, r.comm)
+	err = r.storage.RecvBlob(blobId, r.comm)
 	if err != nil {
 		return fmt.Errorf("error creating blob: %w", err)
 	}
@@ -48,6 +51,16 @@ func (r *ReceiveCommit) receiveBlob() error {
 	return nil
 }
 
+// The logic behind the receiveCommit operation.
+// Reads the commit id, deserializes the commit,
+// extracts the blob ids of the blobs that are missing,
+// sends them to the client, receives the blobs and then
+// saves the commit.
+//
+// Because the commit file is saved after all blobs are
+// downloaded, other goroutines performing send commit operation
+// will not see the current commit before it is ready, so there is
+// not a possibility of race condtion.
 func (r *ReceiveCommit) receiveCommit() error {
 	id, err := r.comm.RecvString()
 	if err != nil {
@@ -74,7 +87,7 @@ func (r *ReceiveCommit) receiveCommit() error {
 			return err
 		}
 	}
-	// mutex ???
+
 	if err := r.storage.SaveCommit(commit); err != nil {
 		return err
 	}

@@ -55,7 +55,7 @@ func TestReceiveCommitHandle(t *testing.T) {
 
 		if len(testCase.stringsToReceive) > 4 {
 			for i, blobId := range testCase.stringsToReceive[4:] {
-				actualMissingBlobId, _ := fileFake.SaveBlobArgsForCall(i)
+				actualMissingBlobId, _ := fileFake.RecvBlobArgsForCall(i)
 				if blobId != actualMissingBlobId {
 					t.Errorf("SaveBlob called with wrong blob id. Expected: %s, actual: %s", blobId, actualMissingBlobId)
 				}

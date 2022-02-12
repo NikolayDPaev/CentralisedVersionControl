@@ -12,6 +12,7 @@ const (
 	ERROR = 1
 )
 
+// Implements the send commit operation
 type SendCommit struct {
 	comm    netio.Communicator
 	storage storage.Storage
@@ -21,6 +22,9 @@ func NewSendCommit(comm netio.Communicator, storage storage.Storage) *SendCommit
 	return &SendCommit{comm, storage}
 }
 
+// Sends to the client the commit with the provided commit id.
+// Returns an error if open commit or some of the
+// send operations fails.
 func (s *SendCommit) sendCommitData(commitId string) error {
 	commit, err := s.storage.OpenCommit(commitId)
 	if err != nil {
@@ -39,30 +43,12 @@ func (s *SendCommit) sendCommitData(commitId string) error {
 	return nil
 }
 
-func (s *SendCommit) sendBlob(blobId string) error {
-	file, err := s.storage.OpenBlob(blobId)
-	if err != nil {
-		return fmt.Errorf("error opening blob %s: %w", blobId, err)
-	}
-	defer file.Close()
+// Sends the blob with the specified blob id to the client.
+// Returns an error if the operation fails.
 
-	if err := s.comm.SendString(blobId); err != nil {
-		return fmt.Errorf("error sending blobId %s: %w", blobId, err)
-	}
-
-	size, err := s.storage.BlobSize(blobId)
-	if err != nil {
-		return fmt.Errorf("error getting blob %s size: %w", blobId, err)
-	}
-
-	err = s.comm.SendFileData(file, size)
-	if err != nil {
-		return fmt.Errorf("error sending blob %s: %w", blobId, err)
-	}
-
-	return nil
-}
-
+// Returns error code to the client if the requested commit with the specified commit id
+// does not exist in the server storage.
+// Returns an error if some operation fails.
 func (s *SendCommit) validateCommitId(commitId string) (bool, error) {
 	exists, err := s.storage.CommitExists(commitId)
 	if err != nil {
@@ -83,6 +69,11 @@ func (s *SendCommit) validateCommitId(commitId string) (bool, error) {
 	return false, nil
 }
 
+// The logic behind send commit operation
+// Reads commit id from the client, validates the commit,
+// sends its data to the client, waits for requested blobs,
+// and sends them.
+// Returns error if any of these operations fails.
 func (s *SendCommit) sendCommit() error {
 	commitId, err := s.comm.RecvString()
 	if err != nil {
@@ -108,7 +99,10 @@ func (s *SendCommit) sendCommit() error {
 	}
 
 	for _, blobId := range blobIdsForSend { // send the requested number of blobs
-		err = s.sendBlob(blobId)
+		if err := s.comm.SendString(blobId); err != nil {
+			return fmt.Errorf("error sending blobId %s: %w", blobId, err)
+		}
+		err = s.storage.SendBlob(blobId, s.comm)
 		if err != nil {
 			return err
 		}

@@ -7,6 +7,7 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
+// Transforms a blob id to a path
 func blobPath(blobId string) (string, error) {
 	if len(blobId) < 2 {
 		return "", fmt.Errorf("invalid length of blobId: %s", blobId)
@@ -14,31 +15,60 @@ func blobPath(blobId string) (string, error) {
 	return "blobs/" + blobId[:2] + "/" + blobId[2:], nil
 }
 
-func (s *FileStorage) OpenBlob(blobId string) (StorageEntry, error) {
+// Returns the size on disk of a the blob with the specified blob id
+func (s *FileStorage) blobSize(blobId string) (int64, error) {
 	path, err := blobPath(blobId)
 	if err != nil {
-		return nil, err
+		return 0, err
+	}
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return 0, fmt.Errorf("cannot get blob %s file info: %w", blobId, err)
+	}
+
+	return fileInfo.Size(), nil
+}
+
+// Sends blob with the specified blobId to the client.
+// Returns error if open file or send fail data fails.
+func (s *FileStorage) SendBlob(blobId string, comm netio.Communicator) error {
+	path, err := blobPath(blobId)
+	if err != nil {
+		return err
 	}
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open blob %s:\n%w", blobId, err)
+		return fmt.Errorf("cannot open blob %s: %w", blobId, err)
 	}
-	return file, nil
+	defer file.Close()
+
+	size, err := s.blobSize(blobId)
+	if err != nil {
+		return fmt.Errorf("error getting blob %s size: %w", blobId, err)
+	}
+
+	err = comm.SendFileData(file, size)
+	if err != nil {
+		return fmt.Errorf("error sending blob %s: %w", blobId, err)
+	}
+
+	return nil
 }
 
-func (s *FileStorage) SaveBlob(blobId string, comm netio.Communicator) error {
+// Reads blob from the client and saves it on the disk.
+func (s *FileStorage) RecvBlob(blobId string, comm netio.Communicator) error {
 	path, err := blobPath(blobId)
 	if err != nil {
 		return err
 	}
 
 	if err := os.MkdirAll("blobs/"+blobId[:2], 0777); err != nil {
-		return fmt.Errorf("cannot create blob folder %s:\n%w", blobId, err)
+		return fmt.Errorf("cannot create blob folder %s: %w", blobId, err)
 	}
 
 	file, err := os.Create(path)
 	if err != nil {
-		return fmt.Errorf("cannot create blob file %s:\n%w", blobId, err)
+		return fmt.Errorf("cannot create blob file %s: %w", blobId, err)
 	}
 	defer file.Close()
 
@@ -49,6 +79,7 @@ func (s *FileStorage) SaveBlob(blobId string, comm netio.Communicator) error {
 	return nil
 }
 
+// Predicate that checks if there is blob with this id on the disk.
 func (s *FileStorage) BlobExists(blobId string) (bool, error) {
 	path, err := blobPath(blobId)
 	if err != nil {
@@ -59,17 +90,4 @@ func (s *FileStorage) BlobExists(blobId string) (bool, error) {
 		return false, err
 	}
 	return b, nil
-}
-
-func (s *FileStorage) BlobSize(blobId string) (int64, error) {
-	path, err := blobPath(blobId)
-	if err != nil {
-		return 0, err
-	}
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		return 0, fmt.Errorf("cannot get blob %s file info:\n%w", blobId, err)
-	}
-
-	return fileInfo.Size(), nil
 }

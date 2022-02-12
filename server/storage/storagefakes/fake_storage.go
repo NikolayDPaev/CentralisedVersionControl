@@ -23,19 +23,6 @@ type FakeStorage struct {
 		result1 bool
 		result2 error
 	}
-	BlobSizeStub        func(string) (int64, error)
-	blobSizeMutex       sync.RWMutex
-	blobSizeArgsForCall []struct {
-		arg1 string
-	}
-	blobSizeReturns struct {
-		result1 int64
-		result2 error
-	}
-	blobSizeReturnsOnCall map[int]struct {
-		result1 int64
-		result2 error
-	}
 	CommitExistsStub        func(string) (bool, error)
 	commitExistsMutex       sync.RWMutex
 	commitExistsArgsForCall []struct {
@@ -72,19 +59,6 @@ type FakeStorage struct {
 		result1 int64
 		result2 error
 	}
-	OpenBlobStub        func(string) (storage.StorageEntry, error)
-	openBlobMutex       sync.RWMutex
-	openBlobArgsForCall []struct {
-		arg1 string
-	}
-	openBlobReturns struct {
-		result1 storage.StorageEntry
-		result2 error
-	}
-	openBlobReturnsOnCall map[int]struct {
-		result1 storage.StorageEntry
-		result2 error
-	}
 	OpenCommitStub        func(string) (*servercommit.Commit, error)
 	openCommitMutex       sync.RWMutex
 	openCommitArgsForCall []struct {
@@ -98,16 +72,16 @@ type FakeStorage struct {
 		result1 *servercommit.Commit
 		result2 error
 	}
-	SaveBlobStub        func(string, netio.Communicator) error
-	saveBlobMutex       sync.RWMutex
-	saveBlobArgsForCall []struct {
+	RecvBlobStub        func(string, netio.Communicator) error
+	recvBlobMutex       sync.RWMutex
+	recvBlobArgsForCall []struct {
 		arg1 string
 		arg2 netio.Communicator
 	}
-	saveBlobReturns struct {
+	recvBlobReturns struct {
 		result1 error
 	}
-	saveBlobReturnsOnCall map[int]struct {
+	recvBlobReturnsOnCall map[int]struct {
 		result1 error
 	}
 	SaveCommitStub        func(*servercommit.Commit) error
@@ -119,6 +93,18 @@ type FakeStorage struct {
 		result1 error
 	}
 	saveCommitReturnsOnCall map[int]struct {
+		result1 error
+	}
+	SendBlobStub        func(string, netio.Communicator) error
+	sendBlobMutex       sync.RWMutex
+	sendBlobArgsForCall []struct {
+		arg1 string
+		arg2 netio.Communicator
+	}
+	sendBlobReturns struct {
+		result1 error
+	}
+	sendBlobReturnsOnCall map[int]struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
@@ -185,70 +171,6 @@ func (fake *FakeStorage) BlobExistsReturnsOnCall(i int, result1 bool, result2 er
 	}
 	fake.blobExistsReturnsOnCall[i] = struct {
 		result1 bool
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeStorage) BlobSize(arg1 string) (int64, error) {
-	fake.blobSizeMutex.Lock()
-	ret, specificReturn := fake.blobSizeReturnsOnCall[len(fake.blobSizeArgsForCall)]
-	fake.blobSizeArgsForCall = append(fake.blobSizeArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	stub := fake.BlobSizeStub
-	fakeReturns := fake.blobSizeReturns
-	fake.recordInvocation("BlobSize", []interface{}{arg1})
-	fake.blobSizeMutex.Unlock()
-	if stub != nil {
-		return stub(arg1)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeStorage) BlobSizeCallCount() int {
-	fake.blobSizeMutex.RLock()
-	defer fake.blobSizeMutex.RUnlock()
-	return len(fake.blobSizeArgsForCall)
-}
-
-func (fake *FakeStorage) BlobSizeCalls(stub func(string) (int64, error)) {
-	fake.blobSizeMutex.Lock()
-	defer fake.blobSizeMutex.Unlock()
-	fake.BlobSizeStub = stub
-}
-
-func (fake *FakeStorage) BlobSizeArgsForCall(i int) string {
-	fake.blobSizeMutex.RLock()
-	defer fake.blobSizeMutex.RUnlock()
-	argsForCall := fake.blobSizeArgsForCall[i]
-	return argsForCall.arg1
-}
-
-func (fake *FakeStorage) BlobSizeReturns(result1 int64, result2 error) {
-	fake.blobSizeMutex.Lock()
-	defer fake.blobSizeMutex.Unlock()
-	fake.BlobSizeStub = nil
-	fake.blobSizeReturns = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeStorage) BlobSizeReturnsOnCall(i int, result1 int64, result2 error) {
-	fake.blobSizeMutex.Lock()
-	defer fake.blobSizeMutex.Unlock()
-	fake.BlobSizeStub = nil
-	if fake.blobSizeReturnsOnCall == nil {
-		fake.blobSizeReturnsOnCall = make(map[int]struct {
-			result1 int64
-			result2 error
-		})
-	}
-	fake.blobSizeReturnsOnCall[i] = struct {
-		result1 int64
 		result2 error
 	}{result1, result2}
 }
@@ -434,70 +356,6 @@ func (fake *FakeStorage) CommitSizeReturnsOnCall(i int, result1 int64, result2 e
 	}{result1, result2}
 }
 
-func (fake *FakeStorage) OpenBlob(arg1 string) (storage.StorageEntry, error) {
-	fake.openBlobMutex.Lock()
-	ret, specificReturn := fake.openBlobReturnsOnCall[len(fake.openBlobArgsForCall)]
-	fake.openBlobArgsForCall = append(fake.openBlobArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	stub := fake.OpenBlobStub
-	fakeReturns := fake.openBlobReturns
-	fake.recordInvocation("OpenBlob", []interface{}{arg1})
-	fake.openBlobMutex.Unlock()
-	if stub != nil {
-		return stub(arg1)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeStorage) OpenBlobCallCount() int {
-	fake.openBlobMutex.RLock()
-	defer fake.openBlobMutex.RUnlock()
-	return len(fake.openBlobArgsForCall)
-}
-
-func (fake *FakeStorage) OpenBlobCalls(stub func(string) (storage.StorageEntry, error)) {
-	fake.openBlobMutex.Lock()
-	defer fake.openBlobMutex.Unlock()
-	fake.OpenBlobStub = stub
-}
-
-func (fake *FakeStorage) OpenBlobArgsForCall(i int) string {
-	fake.openBlobMutex.RLock()
-	defer fake.openBlobMutex.RUnlock()
-	argsForCall := fake.openBlobArgsForCall[i]
-	return argsForCall.arg1
-}
-
-func (fake *FakeStorage) OpenBlobReturns(result1 storage.StorageEntry, result2 error) {
-	fake.openBlobMutex.Lock()
-	defer fake.openBlobMutex.Unlock()
-	fake.OpenBlobStub = nil
-	fake.openBlobReturns = struct {
-		result1 storage.StorageEntry
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeStorage) OpenBlobReturnsOnCall(i int, result1 storage.StorageEntry, result2 error) {
-	fake.openBlobMutex.Lock()
-	defer fake.openBlobMutex.Unlock()
-	fake.OpenBlobStub = nil
-	if fake.openBlobReturnsOnCall == nil {
-		fake.openBlobReturnsOnCall = make(map[int]struct {
-			result1 storage.StorageEntry
-			result2 error
-		})
-	}
-	fake.openBlobReturnsOnCall[i] = struct {
-		result1 storage.StorageEntry
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeStorage) OpenCommit(arg1 string) (*servercommit.Commit, error) {
 	fake.openCommitMutex.Lock()
 	ret, specificReturn := fake.openCommitReturnsOnCall[len(fake.openCommitArgsForCall)]
@@ -562,17 +420,17 @@ func (fake *FakeStorage) OpenCommitReturnsOnCall(i int, result1 *servercommit.Co
 	}{result1, result2}
 }
 
-func (fake *FakeStorage) SaveBlob(arg1 string, arg2 netio.Communicator) error {
-	fake.saveBlobMutex.Lock()
-	ret, specificReturn := fake.saveBlobReturnsOnCall[len(fake.saveBlobArgsForCall)]
-	fake.saveBlobArgsForCall = append(fake.saveBlobArgsForCall, struct {
+func (fake *FakeStorage) RecvBlob(arg1 string, arg2 netio.Communicator) error {
+	fake.recvBlobMutex.Lock()
+	ret, specificReturn := fake.recvBlobReturnsOnCall[len(fake.recvBlobArgsForCall)]
+	fake.recvBlobArgsForCall = append(fake.recvBlobArgsForCall, struct {
 		arg1 string
 		arg2 netio.Communicator
 	}{arg1, arg2})
-	stub := fake.SaveBlobStub
-	fakeReturns := fake.saveBlobReturns
-	fake.recordInvocation("SaveBlob", []interface{}{arg1, arg2})
-	fake.saveBlobMutex.Unlock()
+	stub := fake.RecvBlobStub
+	fakeReturns := fake.recvBlobReturns
+	fake.recordInvocation("RecvBlob", []interface{}{arg1, arg2})
+	fake.recvBlobMutex.Unlock()
 	if stub != nil {
 		return stub(arg1, arg2)
 	}
@@ -582,44 +440,44 @@ func (fake *FakeStorage) SaveBlob(arg1 string, arg2 netio.Communicator) error {
 	return fakeReturns.result1
 }
 
-func (fake *FakeStorage) SaveBlobCallCount() int {
-	fake.saveBlobMutex.RLock()
-	defer fake.saveBlobMutex.RUnlock()
-	return len(fake.saveBlobArgsForCall)
+func (fake *FakeStorage) RecvBlobCallCount() int {
+	fake.recvBlobMutex.RLock()
+	defer fake.recvBlobMutex.RUnlock()
+	return len(fake.recvBlobArgsForCall)
 }
 
-func (fake *FakeStorage) SaveBlobCalls(stub func(string, netio.Communicator) error) {
-	fake.saveBlobMutex.Lock()
-	defer fake.saveBlobMutex.Unlock()
-	fake.SaveBlobStub = stub
+func (fake *FakeStorage) RecvBlobCalls(stub func(string, netio.Communicator) error) {
+	fake.recvBlobMutex.Lock()
+	defer fake.recvBlobMutex.Unlock()
+	fake.RecvBlobStub = stub
 }
 
-func (fake *FakeStorage) SaveBlobArgsForCall(i int) (string, netio.Communicator) {
-	fake.saveBlobMutex.RLock()
-	defer fake.saveBlobMutex.RUnlock()
-	argsForCall := fake.saveBlobArgsForCall[i]
+func (fake *FakeStorage) RecvBlobArgsForCall(i int) (string, netio.Communicator) {
+	fake.recvBlobMutex.RLock()
+	defer fake.recvBlobMutex.RUnlock()
+	argsForCall := fake.recvBlobArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeStorage) SaveBlobReturns(result1 error) {
-	fake.saveBlobMutex.Lock()
-	defer fake.saveBlobMutex.Unlock()
-	fake.SaveBlobStub = nil
-	fake.saveBlobReturns = struct {
+func (fake *FakeStorage) RecvBlobReturns(result1 error) {
+	fake.recvBlobMutex.Lock()
+	defer fake.recvBlobMutex.Unlock()
+	fake.RecvBlobStub = nil
+	fake.recvBlobReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeStorage) SaveBlobReturnsOnCall(i int, result1 error) {
-	fake.saveBlobMutex.Lock()
-	defer fake.saveBlobMutex.Unlock()
-	fake.SaveBlobStub = nil
-	if fake.saveBlobReturnsOnCall == nil {
-		fake.saveBlobReturnsOnCall = make(map[int]struct {
+func (fake *FakeStorage) RecvBlobReturnsOnCall(i int, result1 error) {
+	fake.recvBlobMutex.Lock()
+	defer fake.recvBlobMutex.Unlock()
+	fake.RecvBlobStub = nil
+	if fake.recvBlobReturnsOnCall == nil {
+		fake.recvBlobReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.saveBlobReturnsOnCall[i] = struct {
+	fake.recvBlobReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -685,27 +543,87 @@ func (fake *FakeStorage) SaveCommitReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeStorage) SendBlob(arg1 string, arg2 netio.Communicator) error {
+	fake.sendBlobMutex.Lock()
+	ret, specificReturn := fake.sendBlobReturnsOnCall[len(fake.sendBlobArgsForCall)]
+	fake.sendBlobArgsForCall = append(fake.sendBlobArgsForCall, struct {
+		arg1 string
+		arg2 netio.Communicator
+	}{arg1, arg2})
+	stub := fake.SendBlobStub
+	fakeReturns := fake.sendBlobReturns
+	fake.recordInvocation("SendBlob", []interface{}{arg1, arg2})
+	fake.sendBlobMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeStorage) SendBlobCallCount() int {
+	fake.sendBlobMutex.RLock()
+	defer fake.sendBlobMutex.RUnlock()
+	return len(fake.sendBlobArgsForCall)
+}
+
+func (fake *FakeStorage) SendBlobCalls(stub func(string, netio.Communicator) error) {
+	fake.sendBlobMutex.Lock()
+	defer fake.sendBlobMutex.Unlock()
+	fake.SendBlobStub = stub
+}
+
+func (fake *FakeStorage) SendBlobArgsForCall(i int) (string, netio.Communicator) {
+	fake.sendBlobMutex.RLock()
+	defer fake.sendBlobMutex.RUnlock()
+	argsForCall := fake.sendBlobArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeStorage) SendBlobReturns(result1 error) {
+	fake.sendBlobMutex.Lock()
+	defer fake.sendBlobMutex.Unlock()
+	fake.SendBlobStub = nil
+	fake.sendBlobReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeStorage) SendBlobReturnsOnCall(i int, result1 error) {
+	fake.sendBlobMutex.Lock()
+	defer fake.sendBlobMutex.Unlock()
+	fake.SendBlobStub = nil
+	if fake.sendBlobReturnsOnCall == nil {
+		fake.sendBlobReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.sendBlobReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeStorage) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.blobExistsMutex.RLock()
 	defer fake.blobExistsMutex.RUnlock()
-	fake.blobSizeMutex.RLock()
-	defer fake.blobSizeMutex.RUnlock()
 	fake.commitExistsMutex.RLock()
 	defer fake.commitExistsMutex.RUnlock()
 	fake.commitListMutex.RLock()
 	defer fake.commitListMutex.RUnlock()
 	fake.commitSizeMutex.RLock()
 	defer fake.commitSizeMutex.RUnlock()
-	fake.openBlobMutex.RLock()
-	defer fake.openBlobMutex.RUnlock()
 	fake.openCommitMutex.RLock()
 	defer fake.openCommitMutex.RUnlock()
-	fake.saveBlobMutex.RLock()
-	defer fake.saveBlobMutex.RUnlock()
+	fake.recvBlobMutex.RLock()
+	defer fake.recvBlobMutex.RUnlock()
 	fake.saveCommitMutex.RLock()
 	defer fake.saveCommitMutex.RUnlock()
+	fake.sendBlobMutex.RLock()
+	defer fake.sendBlobMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

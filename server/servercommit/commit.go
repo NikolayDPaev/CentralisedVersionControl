@@ -1,3 +1,4 @@
+// Package that defines the Commit structure and methods for it serialization/deserialization
 package servercommit
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
+// Commit record that represents the server view of a commit.
 type Commit struct {
 	Id      string
 	Message string
@@ -14,6 +16,8 @@ type Commit struct {
 	Tree    string
 }
 
+// Deserializes a new commit from the provided communicator.
+// Returns an error if any of the receive operations fails.
 func NewCommitFrom(id string, comm netio.Communicator) (*Commit, error) {
 	message, err := comm.RecvString()
 	if err != nil {
@@ -27,12 +31,14 @@ func NewCommitFrom(id string, comm netio.Communicator) (*Commit, error) {
 
 	tree, err := comm.RecvString()
 	if err != nil {
-		return nil, fmt.Errorf("cannot read tree string of commit:\n%w", err)
+		return nil, fmt.Errorf("cannot read tree string of commit: %w", err)
 	}
 
 	return &Commit{id, message, creator, tree}, nil
 }
 
+// Serializes the commit to the provided communicator.
+// Returns an error if any of the send operations fails.
 func (c *Commit) WriteTo(comm netio.Communicator) error {
 	err := comm.SendString(c.Message)
 	if err != nil {
@@ -51,17 +57,22 @@ func (c *Commit) WriteTo(comm netio.Communicator) error {
 	return nil
 }
 
-func (c *Commit) ExtractBlobIds() []string { // regex ????
+// Returns slice with the blob ids in the commit.
+func (c *Commit) ExtractBlobIds() []string {
 	lines := strings.Split(c.Tree, "\n")
 
 	blobIds := make([]string, len(lines))
 	for i, line := range lines {
-		blobIds[i] = strings.Split(line, " ")[0]
+		words := strings.Split(line, " ")
+		if len(words) > 0 {
+			blobIds[i] = words[0]
+		}
 	}
 
 	return blobIds
 }
 
+// Returns string representation of the commit.
 func (c Commit) String() string {
 	return c.Id + " \"" + c.Message + "\" " + c.Creator
 }

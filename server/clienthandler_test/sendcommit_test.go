@@ -52,19 +52,11 @@ func TestSendCommitHandle(t *testing.T) {
 	for _, testcase := range testCases {
 		commFake := &netiofakes.FakeCommunicator{}
 		storeFake := &storagefakes.FakeStorage{}
-		storageEntryFake := &storagefakes.FakeStorageEntry{}
-		storageEntryFake.CloseReturns(nil)
 
 		commFake.RecvStringReturnsOnCall(0, testcase.commitId, nil)
 		storeFake.CommitExistsReturnsOnCall(0, true, nil)
 		storeFake.OpenCommitReturnsOnCall(0, &testcase.commit, nil)
 		commFake.RecvStringSliceReturnsOnCall(0, testcase.blobsForSend, nil)
-
-		var size int64 = 5
-		for i := range testcase.blobsForSend {
-			storeFake.OpenBlobReturnsOnCall(i, storageEntryFake, nil)
-			storeFake.BlobSizeReturnsOnCall(i, size, nil)
-		}
 
 		sendCommit := clienthandler.NewSendCommit(commFake, storeFake)
 		if err := sendCommit.Handle(); err != nil {
@@ -86,26 +78,14 @@ func TestSendCommitHandle(t *testing.T) {
 		}
 
 		for i, blob := range testcase.blobsForSend {
-			if actual := storeFake.OpenBlobArgsForCall(i); blob != actual {
+			if actual, _ := storeFake.SendBlobArgsForCall(i); blob != actual {
 				t.Errorf("Open blob called with wrong arg. Expected: %s, actual: %s", blob, actual)
-			}
-		}
-
-		for i, blob := range testcase.blobsForSend {
-			if actual := storeFake.BlobSizeArgsForCall(i); blob != actual {
-				t.Errorf("Blob size called with wrong arg. Expected: %s, actual: %s", blob, actual)
 			}
 		}
 
 		for i, blob := range testcase.blobsForSend {
 			if actual := commFake.SendStringArgsForCall(i + 4); blob != actual {
 				t.Errorf("Send string called with wrong arg when sending blobIds. Expected: %s, actual: %s", blob, actual)
-			}
-		}
-
-		for i := range testcase.blobsForSend {
-			if _, actualSize := commFake.SendFileDataArgsForCall(i); size != actualSize {
-				t.Errorf("Send file data called with wrong args when sending blobs. Expected size: %d, actual size: %d", size, actualSize)
 			}
 		}
 	}
