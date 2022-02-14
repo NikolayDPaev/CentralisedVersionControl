@@ -113,7 +113,6 @@ func (l *Localfiles) ReceiveBlob(filepath string, comm netio.Communicator) error
 	if err := l.decompressFile(filepath, tmp); err != nil {
 		return fmt.Errorf("error decompressing blob: %w", err)
 	}
-	fmt.Printf("%s is decompressed\n", filepath)
 	return nil
 }
 

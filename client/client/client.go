@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"path"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/commands"
 	"github.com/NikolayDPaev/CentralisedVersionControl/client/fileio"
@@ -25,6 +26,7 @@ const (
 )
 
 var errInvalidCommand = errors.New("invalid command")
+var errMetafileAlreadyExists = errors.New("metafile already exist")
 
 const METAFILE_NAME = "./.cvc"
 
@@ -45,7 +47,7 @@ func ReadArgs(args []string) {
 	case "list":
 		err = commitList()
 	case "push":
-		err = uploadCommit()
+		err = uploadCommit(args)
 	case "pull":
 		err = downloadCommit(args)
 	case "help":
@@ -57,6 +59,8 @@ func ReadArgs(args []string) {
 	if err != nil {
 		if errors.Is(err, metadata.ErrMissingMetafile) {
 			fmt.Println("Cannot find .cvc file! Please run command cvc init.")
+		} else if errors.Is(err, errMetafileAlreadyExists) {
+			fmt.Println("Metafile already exists. Please remove it and then run cvc init.")
 		} else if errors.Is(err, errInvalidCommand) {
 			fmt.Println("Incorrect command. For list of commands run \"cvc help\".")
 		} else {
@@ -69,16 +73,22 @@ func ReadArgs(args []string) {
 func help() {
 	fmt.Println("Usage: cvc <command>")
 	fmt.Println("Commands:")
-	fmt.Println("init - initialization of workplace in the current directory")
-	fmt.Println("list - listing of the available commits")
-	fmt.Println("pull <commitId> - downloading commit to the workplace")
-	fmt.Println("push - committing the current state of the workplace ")
+	fmt.Println("init - initializes workplace in the current directory")
+	fmt.Println("list - lists of the available commits")
+	fmt.Println("pull <commitId> - downloads commit to the workplace")
+	fmt.Println("push <message>- commits the current state of the workplace ")
 	fmt.Println("help - prints this text")
 }
 
 // Initializes the client.
-// Creates the metafile that stores username, remote address and file exceptions.
+// Creates the metafile that stores username, remote address and ignored files.
+// METAFILE and the client app binary (if its is present in the directory) are added as
+// ignored files.
 func initClient() error {
+	if ok, err := fileio.FileExists(METAFILE_NAME); ok && err == nil {
+		return errMetafileAlreadyExists
+	}
+
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Enter username:")
 	scanner.Scan()
@@ -94,7 +104,10 @@ func initClient() error {
 
 	IgnoredFiles := make(map[string]struct{}, 2)
 	IgnoredFiles[METAFILE_NAME] = struct{}{}
-	IgnoredFiles[os.Args[0]] = struct{}{}
+
+	if ok, err := fileio.FileExists(path.Base(os.Args[0])); ok && err == nil {
+		IgnoredFiles[os.Args[0]] = struct{}{}
+	}
 
 	metafileData := &metadata.MetafileData{Username: username, Address: address, IgnoredFiles: IgnoredFiles}
 	if err := metadata.Save(metafileData, METAFILE_NAME); err != nil {
@@ -134,7 +147,6 @@ func commitList() error {
 		return fmt.Errorf("cannot execute commit list operation: %w", err)
 	}
 
-	fmt.Println("Commits on server:")
 	for _, str := range slice {
 		fmt.Println(str)
 	}
@@ -172,7 +184,10 @@ func downloadCommit(args []string) error {
 
 // Attempts to add the current files as a commit and to send them to the server.
 // Invokes the UploadCommit methods of Upload struct in commands package.
-func uploadCommit() error {
+func uploadCommit(args []string) error {
+	if len(args) != 2 {
+		return errInvalidCommand
+	}
 	metafile, comm, err := prepCommunication()
 	if err != nil {
 		return err
@@ -184,12 +199,7 @@ func uploadCommit() error {
 		fileio.NewLocalfiles(metafile.IgnoredFiles),
 		UPLOAD_COMMIT)
 
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Println("Enter commit message:")
-	scanner.Scan()
-	message := scanner.Text()
-
-	err = upload.UploadCommit(message, metafile.Username)
+	err = upload.UploadCommit(args[1], metafile.Username)
 	if err != nil {
 		return fmt.Errorf("error uploading commit: %w", err)
 	}

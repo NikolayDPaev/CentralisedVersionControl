@@ -76,8 +76,6 @@ func (d *Download) receiveCommit(commitId string) (*clientcommit.Commit, error) 
 		return nil, ErrInvalidCommitId
 	}
 
-	fmt.Println("Receiving commit")
-
 	commit, err := d.readCommit(commitId, d.comm)
 	if err != nil {
 		return nil, fmt.Errorf("error receiving commit: %w", err)
@@ -144,7 +142,6 @@ func (d *Download) DownloadCommit(commitId string) error {
 		missingBlobIds = append(missingBlobIds, k)
 	}
 
-	fmt.Printf("Requesting missing files\n")
 	if err := d.comm.SendStringSlice(missingBlobIds); err != nil {
 		return fmt.Errorf("error sending missing blobIds: %w", err)
 	}

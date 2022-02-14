@@ -12,7 +12,7 @@ import (
 )
 
 // Predicate that checks if the filepath is valid file
-func (l *Localfiles) fileExists(filePath string) (bool, error) {
+func FileExists(filePath string) (bool, error) {
 	if _, err := os.Stat(filePath); err == nil {
 		return true, nil
 
@@ -44,7 +44,7 @@ func (l *Localfiles) GetHashOfFile(filepath string) (string, error) {
 
 // Checks if the filepath leads to a file with the specific hash.
 func (l *Localfiles) FileWithHashExists(filepath string, hash string) (bool, error) {
-	fileExists, err := l.fileExists(filepath)
+	fileExists, err := FileExists(filepath)
 	if err != nil {
 		return false, fmt.Errorf("error checking if file exists: %w", err)
 	}
