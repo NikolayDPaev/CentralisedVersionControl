@@ -87,16 +87,6 @@ func (s *FileStorage) SaveCommit(commit *servercommit.Commit) error {
 	return nil
 }
 
-// Returns the size of the commit file on the disk.
-func (s *FileStorage) CommitSize(commitId string) (int64, error) {
-	fileInfo, err := os.Stat("commits/" + commitId)
-	if err != nil {
-		return 0, fmt.Errorf("cannot get commit %s file info: %w", commitId, err)
-	}
-
-	return fileInfo.Size(), nil
-}
-
 // Predicate that checks if there is a commit with the specified commit id on the disk.
 func (s *FileStorage) CommitExists(commitId string) (bool, error) {
 	b, err := fileExists("commits/" + commitId)

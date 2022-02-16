@@ -46,19 +46,6 @@ type FakeStorage struct {
 	commitListReturnsOnCall map[int]struct {
 		result1 []string
 	}
-	CommitSizeStub        func(string) (int64, error)
-	commitSizeMutex       sync.RWMutex
-	commitSizeArgsForCall []struct {
-		arg1 string
-	}
-	commitSizeReturns struct {
-		result1 int64
-		result2 error
-	}
-	commitSizeReturnsOnCall map[int]struct {
-		result1 int64
-		result2 error
-	}
 	OpenCommitStub        func(string) (*servercommit.Commit, error)
 	openCommitMutex       sync.RWMutex
 	openCommitArgsForCall []struct {
@@ -290,70 +277,6 @@ func (fake *FakeStorage) CommitListReturnsOnCall(i int, result1 []string) {
 	fake.commitListReturnsOnCall[i] = struct {
 		result1 []string
 	}{result1}
-}
-
-func (fake *FakeStorage) CommitSize(arg1 string) (int64, error) {
-	fake.commitSizeMutex.Lock()
-	ret, specificReturn := fake.commitSizeReturnsOnCall[len(fake.commitSizeArgsForCall)]
-	fake.commitSizeArgsForCall = append(fake.commitSizeArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	stub := fake.CommitSizeStub
-	fakeReturns := fake.commitSizeReturns
-	fake.recordInvocation("CommitSize", []interface{}{arg1})
-	fake.commitSizeMutex.Unlock()
-	if stub != nil {
-		return stub(arg1)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeStorage) CommitSizeCallCount() int {
-	fake.commitSizeMutex.RLock()
-	defer fake.commitSizeMutex.RUnlock()
-	return len(fake.commitSizeArgsForCall)
-}
-
-func (fake *FakeStorage) CommitSizeCalls(stub func(string) (int64, error)) {
-	fake.commitSizeMutex.Lock()
-	defer fake.commitSizeMutex.Unlock()
-	fake.CommitSizeStub = stub
-}
-
-func (fake *FakeStorage) CommitSizeArgsForCall(i int) string {
-	fake.commitSizeMutex.RLock()
-	defer fake.commitSizeMutex.RUnlock()
-	argsForCall := fake.commitSizeArgsForCall[i]
-	return argsForCall.arg1
-}
-
-func (fake *FakeStorage) CommitSizeReturns(result1 int64, result2 error) {
-	fake.commitSizeMutex.Lock()
-	defer fake.commitSizeMutex.Unlock()
-	fake.CommitSizeStub = nil
-	fake.commitSizeReturns = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeStorage) CommitSizeReturnsOnCall(i int, result1 int64, result2 error) {
-	fake.commitSizeMutex.Lock()
-	defer fake.commitSizeMutex.Unlock()
-	fake.CommitSizeStub = nil
-	if fake.commitSizeReturnsOnCall == nil {
-		fake.commitSizeReturnsOnCall = make(map[int]struct {
-			result1 int64
-			result2 error
-		})
-	}
-	fake.commitSizeReturnsOnCall[i] = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
 }
 
 func (fake *FakeStorage) OpenCommit(arg1 string) (*servercommit.Commit, error) {
@@ -614,8 +537,6 @@ func (fake *FakeStorage) Invocations() map[string][][]interface{} {
 	defer fake.commitExistsMutex.RUnlock()
 	fake.commitListMutex.RLock()
 	defer fake.commitListMutex.RUnlock()
-	fake.commitSizeMutex.RLock()
-	defer fake.commitSizeMutex.RUnlock()
 	fake.openCommitMutex.RLock()
 	defer fake.openCommitMutex.RUnlock()
 	fake.recvBlobMutex.RLock()

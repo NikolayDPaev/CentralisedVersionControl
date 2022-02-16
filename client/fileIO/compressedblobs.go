@@ -2,17 +2,12 @@ package fileio
 
 import (
 	"compress/gzip"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
-)
-
-const (
-	CHUNK_SIZE = 4096
 )
 
 // Compresses the provided file to new temporary file.
@@ -31,19 +26,10 @@ func (l *Localfiles) compressToTempFile(source string) (*os.File, error) {
 	}
 
 	gzipWriter := gzip.NewWriter(dFile)
-	bytes := make([]byte, CHUNK_SIZE)
+	defer gzipWriter.Close()
 
-	n, errR := sFile.Read(bytes)
-	_, errW := gzipWriter.Write(bytes[:n])
-	for n > 0 && (errR == nil || errors.Is(errR, io.EOF)) && errW == nil {
-		n, errR = sFile.Read(bytes)
-		_, errW = gzipWriter.Write(bytes[:n])
-	}
-	if errR != nil && !errors.Is(errR, io.EOF) {
-		return nil, fmt.Errorf("error while reading chunks of file: %w", errR)
-	}
-	if errW != nil {
-		return nil, fmt.Errorf("error while writing to gzipWriter chunks of file: %w", errW)
+	if _, err := io.Copy(gzipWriter, sFile); err != nil {
+		return nil, fmt.Errorf("error while writing to gzipWriter the file file: %w", err)
 	}
 
 	gzipWriter.Close()
@@ -75,20 +61,9 @@ func (l *Localfiles) decompressFile(dest string, sFile *os.File) error {
 		return fmt.Errorf("error decompressing file: %w", err)
 	}
 	defer gzipReader.Close()
-	bytes := make([]byte, CHUNK_SIZE)
 
-	n, errR := gzipReader.Read(bytes)
-	_, errW := dFile.Write(bytes[:n])
-	for n > 0 && (errR == nil || errors.Is(errR, io.EOF)) && errW == nil {
-		n, errR = gzipReader.Read(bytes)
-		_, errW = dFile.Write(bytes[:n])
-	}
-
-	if errR != nil && !errors.Is(errR, io.EOF) {
-		return fmt.Errorf("error decompressing chunks of file while reading from gzipReader: %w", errR)
-	}
-	if errW != nil {
-		return fmt.Errorf("error decompressing chunks of file while writing to destination file: %w", errW)
+	if _, err := io.Copy(dFile, gzipReader); err != nil {
+		return fmt.Errorf("error while writing to gzipWriter the file file: %w", err)
 	}
 
 	return nil

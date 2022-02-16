@@ -45,13 +45,13 @@ func (s *Server) Stop() {
 func (s *Server) sendEmptyRequest() error {
 	c, err := net.Dial("tcp", "localhost:"+s.port)
 	if err != nil {
-		return fmt.Errorf("error creating poison socket:\n%w", err)
+		return fmt.Errorf("error creating poison socket: %w", err)
 	}
 	defer c.Close()
 
 	comm := netio.NewCommunication(CHUNK_SIZE, c, c)
 	if err := comm.SendVarInt(clienthandler.EMPTY_REQUEST); err != nil {
-		return fmt.Errorf("error sending empty request:\n%w", err)
+		return fmt.Errorf("error sending empty request: %w", err)
 	}
 	return nil
 }

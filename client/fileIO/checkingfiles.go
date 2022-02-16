@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// Predicate that checks if the filepath is valid file
+// Predicate that checks if the filepath leads to existing file
 func FileExists(filePath string) (bool, error) {
 	if _, err := os.Stat(filePath); err == nil {
 		return true, nil
@@ -24,7 +24,7 @@ func FileExists(filePath string) (bool, error) {
 	}
 }
 
-// Returns Md5Sum of the file on the provided filepath
+// Returns Md5Sum of the file with the provided filepath
 func (l *Localfiles) GetHashOfFile(filepath string) (string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -58,16 +58,6 @@ func (l *Localfiles) FileWithHashExists(filepath string, hash string) (bool, err
 	}
 
 	return hash == realHash, nil
-}
-
-// Turns to the os package to get the size of the file
-func (l *Localfiles) FileSize(path string) (int64, error) {
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		return 0, fmt.Errorf("cannot get file %s file info: %w", path, err)
-	}
-
-	return fileInfo.Size(), nil
 }
 
 // Returns slice with paths to all files in all directories.

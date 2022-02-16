@@ -8,12 +8,23 @@ import (
 
 // Interface that defines all operations with the local files
 type Localcopy interface {
+	// Returns Md5Sum of the file with the provided filepath
 	GetHashOfFile(filepath string) (string, error)
-	GetPathsOfAllFiles() ([]string, error)
+
+	// Checks if the file with the provided path has the provided hash.
+	// If file does not exist returns error.
 	FileWithHashExists(filepath string, hash string) (bool, error)
-	FileSize(path string) (int64, error)
+
+	// Returns slice with paths to all files in all directories.
+	GetPathsOfAllFiles() ([]string, error)
+
+	// Deletes all files that are not part of the provided commitFilesSet.
 	CleanOtherFiles(commitFilesSet map[string]struct{}) error
+
+	// Receives the file with the provided path via the communicator.
 	ReceiveBlob(filepath string, comm netio.Communicator) error
+
+	// Sends the file with the provided path via the communicator.
 	SendBlob(filepath string, comm netio.Communicator) error
 }
 
