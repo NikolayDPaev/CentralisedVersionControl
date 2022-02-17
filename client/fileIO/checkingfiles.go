@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// Predicate that checks if the filepath leads to existing file
+// FileExists is a predicate that checks if the filepath leads to existing file
 func FileExists(filePath string) (bool, error) {
 	if _, err := os.Stat(filePath); err == nil {
 		return true, nil
@@ -24,7 +24,7 @@ func FileExists(filePath string) (bool, error) {
 	}
 }
 
-// Returns Md5Sum of the file with the provided filepath
+// GetHashOfFile returns Md5Sum of the file with the provided filepath
 func (l *Localfiles) GetHashOfFile(filepath string) (string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -42,7 +42,7 @@ func (l *Localfiles) GetHashOfFile(filepath string) (string, error) {
 	return strings.ReplaceAll(str, "=", ""), nil
 }
 
-// Checks if the filepath leads to a file with the specific hash.
+// FileWithHashExists checks if the filepath leads to a file with the specific hash.
 func (l *Localfiles) FileWithHashExists(filepath string, hash string) (bool, error) {
 	fileExists, err := FileExists(filepath)
 	if err != nil {
@@ -60,7 +60,7 @@ func (l *Localfiles) FileWithHashExists(filepath string, hash string) (bool, err
 	return hash == realHash, nil
 }
 
-// Returns slice with paths to all files in all directories.
+// GetPathsOfAllFiles returns slice with paths to all files in all directories.
 // Skips files which paths are in the FileExceptions set.
 // Uses the DFS algorithm.
 func (l *Localfiles) GetPathsOfAllFiles() ([]string, error) {
@@ -115,7 +115,7 @@ func (l *Localfiles) deleteFileIfNotInSet(file string, filesSet map[string]struc
 	return nil
 }
 
-// Deletes all files that are not present in both the provided set and fileException set.
+// CleanOtherFiles deletes all files that are not present in both the provided set and fileException set.
 // Invokes deleteFileIfNotInSet on all files using DFS algorithm.
 // If directory is empty after the operation invokes removeDirIfEmpty method.
 func (l *Localfiles) CleanOtherFiles(commitFilesSet map[string]struct{}) error {

@@ -30,7 +30,7 @@ func NewCommunication(chunkSize int, writer io.Writer, reader io.Reader) Communi
 	return &NetCommunication{chunkSize, writer, reader}
 }
 
-// Writes an int with variable length to the io writer.
+// SendVarInt writes an int with variable length to the io writer.
 // Returns error if there is an IO error.
 func (c *NetCommunication) SendVarInt(num int64) error {
 	buf := make([]byte, INT_64_BYTE_LEN)
@@ -42,7 +42,7 @@ func (c *NetCommunication) SendVarInt(num int64) error {
 	return nil
 }
 
-// Reads an int with variable length from the io reader.
+// RecvVarInt reads an int with variable length from the io reader.
 // Returns error if there is an IO error.
 func (c *NetCommunication) RecvVarInt() (int64, error) {
 	num, err := ReadVarint(c.reader)
@@ -52,7 +52,7 @@ func (c *NetCommunication) RecvVarInt() (int64, error) {
 	return num, nil
 }
 
-// Writes a string to the io writer.
+// SendString writes a string to the io writer.
 // First sends a var int with its length then sends byte buffer with the string contains.
 // Returns error if there is an IO error.
 func (c *NetCommunication) SendString(str string) error {
@@ -67,7 +67,7 @@ func (c *NetCommunication) SendString(str string) error {
 	return nil
 }
 
-// Reads a string from the io reader.
+// RecvString reads a string from the io reader.
 // First reads a var int with the length then reads up to length bytes to a byte buffer.
 // Returns error if there is an IO error.
 func (c *NetCommunication) RecvString() (string, error) {
@@ -89,7 +89,7 @@ func (c *NetCommunication) RecvString() (string, error) {
 	return string(bytes), nil
 }
 
-// Writes a string slice to io writer.
+// SendStringSlice writes a string slice to io writer.
 // First sends a var int with its length, then sends the elements of the slice with sendString.
 // Returns error if there is an IO error.
 func (c *NetCommunication) SendStringSlice(slice []string) error {
@@ -105,7 +105,7 @@ func (c *NetCommunication) SendStringSlice(slice []string) error {
 	return nil
 }
 
-// Reads a string slice from the io reader.
+// RecvStringSlice reads a string slice from the io reader.
 // First reads a var int with its length, then reads the strings with recvString.
 // Returns error if there is an IO error.
 func (c *NetCommunication) RecvStringSlice() ([]string, error) {
@@ -124,7 +124,7 @@ func (c *NetCommunication) RecvStringSlice() ([]string, error) {
 	return slice, nil
 }
 
-// Reads up to fileLength bytes from the fileReader and writes them to the io writer.
+// SendFileData reads up to fileLength bytes from the fileReader and writes them to the io writer.
 // It is done on chunks with the specified chunkSize.
 // Returns error if there is an IO error.
 func (c *NetCommunication) SendFileData(fileReader io.Reader, fileLength int64) error {
@@ -152,7 +152,7 @@ func (c *NetCommunication) SendFileData(fileReader io.Reader, fileLength int64) 
 	return nil
 }
 
-// Reads a number from the io reader and then reads up to the this number
+// RecvFileData reads a number from the io reader and then reads up to the this number
 // from the reader and writes it to the provided fileWriter.
 // It is done on chunks with the specified chunkSize.
 // Returns error if there is an IO error.

@@ -9,7 +9,7 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
-// Implements the Upload commit operation
+// Upload implements the Upload commit operation
 type Upload struct {
 	comm     netio.Communicator
 	localcpy fileio.Localcopy
@@ -20,7 +20,7 @@ func NewUpload(comm netio.Communicator, localcpy fileio.Localcopy, opcode int) *
 	return &Upload{comm, localcpy, opcode}
 }
 
-// Creates a commit structure representing the current files in the working directory.
+// createCommit creates a commit structure representing the current files in the working directory.
 // Turns to the localcopy interface to get all paths and the hashes.
 // If any of the operations fails - returns error.
 func createCommit(message, creator string, localcpy fileio.Localcopy) (*clientcommit.Commit, error) {
@@ -45,7 +45,7 @@ func createCommit(message, creator string, localcpy fileio.Localcopy) (*clientco
 	return &clientcommit.Commit{Message: message, Creator: creator, FileSortedSlice: fileSortedSlice}, nil
 }
 
-// Sends the commit struct to the server via the communicator interface.
+// sendCommit sends the commit struct to the server via the communicator interface.
 // The commit is broken down to id, message, creator and tree string representing the blobIds and paths
 // Returns error if any of the communication operations fails.
 func (u *Upload) sendCommit(commit *clientcommit.Commit) error {
@@ -72,7 +72,7 @@ func (u *Upload) sendCommit(commit *clientcommit.Commit) error {
 	return nil
 }
 
-// Sends blob to the server via the communicator interface.
+// sendBlob sends blob to the server via the communicator interface.
 // More specificaly sends the blobId and then turns to the localcopy interface
 // to send the file contains.
 func (u *Upload) sendBlob(blobId string, commit *clientcommit.Commit) error {
@@ -91,7 +91,7 @@ func (u *Upload) sendBlob(blobId string, commit *clientcommit.Commit) error {
 	return nil
 }
 
-// Method that encapsulates all the logic behind upload commit operation.
+// UploadCommit is method that encapsulates all the logic behind upload commit operation.
 // Sends opcode, then creates and sends commit and then sends the requested
 // blobs that the server is missing.
 // Returns error if any operation fails.

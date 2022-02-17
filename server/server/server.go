@@ -24,14 +24,14 @@ func NewServer(netInterface, port string) *Server {
 	return &Server{port: port, running: false}
 }
 
-// Starts the server.
+// Start starts the server.
 // Does not block.
 func (s *Server) Start() {
 	s.running = true
 	go s.runServer()
 }
 
-// Stops the server gracefully.
+// Stop stops the server gracefully.
 // Waits for all clients to be serviced.
 func (s *Server) Stop() {
 	s.running = false
@@ -41,7 +41,7 @@ func (s *Server) Stop() {
 	s.wg.Wait()
 }
 
-// Used to unblock the server from waiting on accept()
+// sendEmptyRequest is used to unblock the server from waiting on accept()
 func (s *Server) sendEmptyRequest() error {
 	c, err := net.Dial("tcp", "localhost:"+s.port)
 	if err != nil {
@@ -56,7 +56,7 @@ func (s *Server) sendEmptyRequest() error {
 	return nil
 }
 
-// Goroutine that handles incomming client.
+// handleClient is a goroutine that handles incomming client.
 // When its ready it closes the socket and decrements the wait group.
 // If empty request is received (sent by the sendEmptyRequest function) it returns immediately.
 func handleClient(c net.Conn, wg *sync.WaitGroup) {
@@ -80,7 +80,7 @@ func handleClient(c net.Conn, wg *sync.WaitGroup) {
 	}
 }
 
-// Server routine.
+// runServer is the server routine.
 // Incomming clients are handled by a separate goroutine
 // and the counter in the wait group is incremented
 func (s *Server) runServer() {

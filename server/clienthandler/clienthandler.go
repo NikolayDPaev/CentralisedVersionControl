@@ -20,7 +20,7 @@ type Clienthandler interface {
 	Handle() error
 }
 
-// Returns clienthandler implementation based on the opcode received from the client
+// NewHandler returns clienthandler implementation based on the opcode received from the client
 func NewHandler(comm netio.Communicator, storage storage.Storage) (Clienthandler, error) {
 	opCode, err := comm.RecvVarInt()
 	if err != nil {

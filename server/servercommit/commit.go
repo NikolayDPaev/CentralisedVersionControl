@@ -8,7 +8,7 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
-// Commit record that represents the server view of a commit.
+// Commit is a record that represents the server view of a commit.
 type Commit struct {
 	Id      string
 	Message string
@@ -16,7 +16,7 @@ type Commit struct {
 	Tree    string
 }
 
-// Deserializes a new commit from the provided communicator.
+// NewCommitFrom deserializes a new commit from the provided communicator.
 // Returns an error if any of the receive operations fails.
 func NewCommitFrom(id string, comm netio.Communicator) (*Commit, error) {
 	message, err := comm.RecvString()
@@ -37,7 +37,7 @@ func NewCommitFrom(id string, comm netio.Communicator) (*Commit, error) {
 	return &Commit{id, message, creator, tree}, nil
 }
 
-// Serializes the commit to the provided communicator.
+// WriteTo serializes the commit to the provided communicator.
 // Returns an error if any of the send operations fails.
 func (c *Commit) WriteTo(comm netio.Communicator) error {
 	err := comm.SendString(c.Message)
@@ -57,7 +57,7 @@ func (c *Commit) WriteTo(comm netio.Communicator) error {
 	return nil
 }
 
-// Returns slice with the blob ids in the commit.
+// ExtractBlobIds returns slice with the blob ids in the commit.
 func (c *Commit) ExtractBlobIds() []string {
 	lines := strings.Split(c.Tree, "\n")
 
@@ -72,7 +72,7 @@ func (c *Commit) ExtractBlobIds() []string {
 	return blobIds
 }
 
-// Returns string representation of the commit.
+// String returns string representation of the commit.
 func (c Commit) String() string {
 	return c.Id + " \"" + c.Message + "\" " + c.Creator
 }

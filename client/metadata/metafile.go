@@ -7,14 +7,14 @@ import (
 
 var ErrMissingMetafile = errors.New("cannot open .cvc file")
 
-// Struct that represents the data of the metafile
+// MetafileData is a struct that represents the data of the metafile
 type MetafileData struct {
 	Username     string
 	Address      string
 	IgnoredFiles map[string]struct{}
 }
 
-// Tries to open the metafile to read it.
+// ReadMetafileData tries to open the metafile to read it.
 // Returns metafileData struct.
 func ReadMetafileData(metafileName string) (*MetafileData, error) {
 	file, err := openMetaFile(metafileName)
@@ -46,7 +46,7 @@ func ReadMetafileData(metafileName string) (*MetafileData, error) {
 	return &MetafileData{Username: username, Address: address, IgnoredFiles: ignored}, nil
 }
 
-// Saves the metadata struct to a new metafile
+// Save saves the metadata struct to a new metafile
 func Save(data *MetafileData, metafileName string) error {
 	file, err := newMetaFile(metafileName)
 	if err != nil {

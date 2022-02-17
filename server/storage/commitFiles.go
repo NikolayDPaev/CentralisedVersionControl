@@ -11,7 +11,7 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/servercommit"
 )
 
-// Predicate that checks if file with the specified filePath exists.
+// fileExists is a predicate that checks if file with the specified filePath exists.
 func fileExists(filePath string) (bool, error) {
 	if _, err := os.Stat(filePath); err == nil {
 		return true, nil
@@ -24,7 +24,7 @@ func fileExists(filePath string) (bool, error) {
 	}
 }
 
-// Returns a slice with the string representation of all commits on the disk,
+// CommitList returns a slice with the string representation of all commits on the disk,
 // sorted in the order of creation.
 func (s *FileStorage) CommitList() []string {
 	f, err := os.Open("./commits")
@@ -58,7 +58,7 @@ func (s *FileStorage) CommitList() []string {
 	return result
 }
 
-// Deserializes a new commit with this commit id from the disk.
+// OpenCommit deserializes a new commit with this commit id from the disk.
 func (s *FileStorage) OpenCommit(commitId string) (*servercommit.Commit, error) {
 	file, err := os.Open("commits/" + commitId)
 	if err != nil {
@@ -68,7 +68,7 @@ func (s *FileStorage) OpenCommit(commitId string) (*servercommit.Commit, error) 
 	return servercommit.NewCommitFrom(commitId, fileComm)
 }
 
-// Serializes the provided commit record to the disk.
+// SaveCommit serializes the provided commit record to the disk.
 func (s *FileStorage) SaveCommit(commit *servercommit.Commit) error {
 	if err := os.MkdirAll("commits", 0777); err != nil {
 		return fmt.Errorf("cannot create commit folder: %w", err)
@@ -87,7 +87,7 @@ func (s *FileStorage) SaveCommit(commit *servercommit.Commit) error {
 	return nil
 }
 
-// Predicate that checks if there is a commit with the specified commit id on the disk.
+// CommitExists predicate that checks if there is a commit with the specified commit id on the disk.
 func (s *FileStorage) CommitExists(commitId string) (bool, error) {
 	b, err := fileExists("commits/" + commitId)
 	if err != nil {

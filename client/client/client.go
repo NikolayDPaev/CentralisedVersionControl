@@ -1,4 +1,4 @@
-// Package client provides the user interface to the client app
+// Client provides the user interface of the client app
 package client
 
 import (
@@ -30,7 +30,7 @@ var errMetafileAlreadyExists = errors.New("metafile already exist")
 
 const METAFILE_NAME = "./.cvc"
 
-// Entry function that receives the user args with which the app is called.
+// ReadArgs is a function that receives the user args with which the app is called.
 // It invokes the different commands based on the args provided.
 // The function excepts args slice starting from the first argument
 // (the zeroth - the name of the binary should be omitted - ReadArgs(os.Args[1:])).
@@ -69,7 +69,7 @@ func ReadArgs(args []string) {
 	}
 }
 
-// Prints the help menu.
+// help prints the help menu.
 func help() {
 	fmt.Println("Usage: cvc <command>")
 	fmt.Println("Commands:")
@@ -80,7 +80,7 @@ func help() {
 	fmt.Println("help - prints this text")
 }
 
-// Initializes the client.
+// initClient initializes the client.
 // Creates the metafile that stores username, remote address and ignored files.
 // METAFILE and the client app binary (if its is present in the directory) are added as
 // ignored files.
@@ -116,7 +116,7 @@ func initClient() error {
 	return nil
 }
 
-// Reads metafile and connects to the server.
+// prepCommunication reads metafile and connects to the server.
 // Returns error if any of the two operation fails.
 func prepCommunication() (*metadata.MetafileData, net.Conn, error) {
 	metafile, err := metadata.ReadMetafileData(METAFILE_NAME)
@@ -131,7 +131,7 @@ func prepCommunication() (*metadata.MetafileData, net.Conn, error) {
 	return metafile, c, nil
 }
 
-// Attempts to make request for the commit list of the server
+// commitList attempts to make request for the commit list of the server
 // by invoking the GetCommitlist method of the struct CommitList in commands package
 // If successful - prints it.
 func commitList() error {
@@ -154,7 +154,7 @@ func commitList() error {
 	return nil
 }
 
-// Request a commit from the server by invoking
+// downloadCommit request a commit from the server by invoking
 // the Download commit method of the struct Download in commands package
 func downloadCommit(args []string) error {
 	if len(args) != 2 {
@@ -182,7 +182,7 @@ func downloadCommit(args []string) error {
 	return nil
 }
 
-// Attempts to add the current files as a commit and to send them to the server.
+// uploadCommit attempts to add the current files as a commit and to send them to the server.
 // Invokes the UploadCommit methods of Upload struct in commands package.
 func uploadCommit(args []string) error {
 	if len(args) != 2 {

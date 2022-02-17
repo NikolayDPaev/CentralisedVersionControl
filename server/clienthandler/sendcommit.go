@@ -12,7 +12,7 @@ const (
 	ERROR = 1
 )
 
-// Implements the send commit operation
+// SendCommit implements the send commit operation
 type SendCommit struct {
 	comm    netio.Communicator
 	storage storage.Storage
@@ -22,7 +22,7 @@ func NewSendCommit(comm netio.Communicator, storage storage.Storage) *SendCommit
 	return &SendCommit{comm, storage}
 }
 
-// Sends to the client the commit with the provided commit id.
+// sendCommitData sends to the client the commit with the provided commit id.
 // Returns an error if open commit or some of the
 // send operations fails.
 func (s *SendCommit) sendCommitData(commitId string) error {
@@ -43,10 +43,7 @@ func (s *SendCommit) sendCommitData(commitId string) error {
 	return nil
 }
 
-// Sends the blob with the specified blob id to the client.
-// Returns an error if the operation fails.
-
-// Returns error code to the client if the requested commit with the specified commit id
+// validateCommitId returns error code to the client if the requested commit with the specified commit id
 // does not exist in the server storage.
 // Returns an error if some operation fails.
 func (s *SendCommit) validateCommitId(commitId string) (bool, error) {
@@ -69,7 +66,7 @@ func (s *SendCommit) validateCommitId(commitId string) (bool, error) {
 	return false, nil
 }
 
-// The logic behind send commit operation
+// sendCommit provides the logic behind send commit operation
 // Reads commit id from the client, validates the commit,
 // sends its data to the client, waits for requested blobs,
 // and sends them.

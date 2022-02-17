@@ -1,4 +1,4 @@
-// Package contains a data structure that represents a commit,
+// clientcommit contains a data structure that represents a commit,
 // along with some methods
 package clientcommit
 
@@ -11,13 +11,13 @@ import (
 	"strings"
 )
 
-// Record, used to represent a file object - hash for id and path.
+// CommitEntry is record that is used to represent a file object - hash for id and path.
 type CommitEntry struct {
 	Hash string
 	Path string
 }
 
-// Struct representing the client view of a commit.
+// Commit is a struct that is representing the way the client sees the commit.
 // It has fields - Message and Creator and FileSortedSlice that
 // keeps track of all files in the commit. The slice is sorted
 // acording to the Hash in CommitEntry and searching for element
@@ -34,7 +34,8 @@ type Commit struct {
 	FileSortedSlice []CommitEntry
 }
 
-// Function for transforming between the different representations of the files in commit
+// GetSortedSlice is a function for transforming between the different
+// representations of the files in commit
 // Expects string that contains lines: "hash path"
 // Returns sorted slice of CommitEntries
 func GetSortedSlice(tree string) ([]CommitEntry, error) {
@@ -59,7 +60,7 @@ func GetSortedSlice(tree string) ([]CommitEntry, error) {
 	return fileSortedSlice, nil
 }
 
-// Finds the path of a file by its hash.
+// GetBlobPath returns the path of a file by its hash.
 // Uses binary search in the sorted slice representing the files.
 // If there is no such blob with this hash - returns an error.
 func (c *Commit) GetBlobPath(blobId string) (string, error) {
@@ -79,8 +80,9 @@ func (c *Commit) GetBlobPath(blobId string) (string, error) {
 	return "", errors.New("missing blobId in file slice")
 }
 
-// Function for transforming between the different representations of the files in commit
-// Returns string that contains lines: "hash path"
+// GetTree is a function for transforming between the different
+// representations of the files in commit.
+// Returns string that contains lines: "hash path".
 func (c *Commit) GetTree() string {
 	var sb strings.Builder
 	for _, entry := range c.FileSortedSlice {
@@ -93,8 +95,8 @@ func (c *Commit) GetTree() string {
 	return str
 }
 
-// Returns the Md5Sum of all fields in the struct
-// It is used as an id of the commit
+// Md5Hash returns the Md5Sum of all fields in the struct.
+// It is used as an id of the commit.
 func (c *Commit) Md5Hash() string {
 	hash := md5.Sum([]byte(fmt.Sprintf("%v", c)))
 	str := base32.StdEncoding.EncodeToString(hash[:])
@@ -102,7 +104,7 @@ func (c *Commit) Md5Hash() string {
 	return strings.ReplaceAll(str, "=", "")
 }
 
-// Returns a "set" - map[string]struct{} of all paths in the file slice
+// GetSetOfPaths returns a "set" (map[string]struct{}) of all paths in the file slice.
 func (c *Commit) GetSetOfPaths() map[string]struct{} {
 	set := make(map[string]struct{}, len(c.FileSortedSlice))
 

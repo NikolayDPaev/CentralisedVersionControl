@@ -7,7 +7,7 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
-// Transforms a blob id to a path
+// blobPath returns a path from blobId
 func blobPath(blobId string) (string, error) {
 	if len(blobId) < 2 {
 		return "", fmt.Errorf("invalid length of blobId: %s", blobId)
@@ -15,7 +15,7 @@ func blobPath(blobId string) (string, error) {
 	return "blobs/" + blobId[:2] + "/" + blobId[2:], nil
 }
 
-// Returns the size on disk of a the blob with the specified blob id
+// blobSize returns the size on disk of a the blob with the specified blob id
 func (s *FileStorage) blobSize(blobId string) (int64, error) {
 	path, err := blobPath(blobId)
 	if err != nil {
@@ -29,7 +29,7 @@ func (s *FileStorage) blobSize(blobId string) (int64, error) {
 	return fileInfo.Size(), nil
 }
 
-// Sends blob with the specified blobId to the client.
+// SendBlob sends blob with the specified blobId to the client.
 // Returns error if open file or send fail data fails.
 func (s *FileStorage) SendBlob(blobId string, comm netio.Communicator) error {
 	path, err := blobPath(blobId)
@@ -55,7 +55,7 @@ func (s *FileStorage) SendBlob(blobId string, comm netio.Communicator) error {
 	return nil
 }
 
-// Reads blob from the client and saves it on the disk.
+// RecvBlob reads blob from the client and saves it on the disk.
 func (s *FileStorage) RecvBlob(blobId string, comm netio.Communicator) error {
 	path, err := blobPath(blobId)
 	if err != nil {
@@ -79,7 +79,7 @@ func (s *FileStorage) RecvBlob(blobId string, comm netio.Communicator) error {
 	return nil
 }
 
-// Predicate that checks if there is blob with this id on the disk.
+// BlobExists predicate that checks if there is blob with this id on the disk.
 func (s *FileStorage) BlobExists(blobId string) (bool, error) {
 	path, err := blobPath(blobId)
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/netio"
 )
 
-// Implements the list commits operation
+// Commitlist implements the list commits operation
 type Commitlist struct {
 	comm   netio.Communicator
 	opcode int
@@ -16,7 +16,7 @@ func NewCommitList(comm netio.Communicator, opcode int) *Commitlist {
 	return &Commitlist{comm, opcode}
 }
 
-// Requsts a commit list from the server
+// GetCommitList requsts a commit list from the server
 // Sends opcode of the operation and receives a slice from strings
 // representing the commits on the server.
 func (c *Commitlist) GetCommitList() ([]string, error) {

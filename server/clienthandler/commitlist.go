@@ -7,7 +7,7 @@ import (
 	"github.com/NikolayDPaev/CentralisedVersionControl/server/storage"
 )
 
-// Implements the commit list operation.
+// CommitList implements the commit list operation.
 type CommitList struct {
 	comm    netio.Communicator
 	storage storage.Storage
@@ -17,7 +17,7 @@ func NewCommitList(comm netio.Communicator, storage storage.Storage) *CommitList
 	return &CommitList{comm, storage}
 }
 
-// Sends commitList to the client as a string slice.
+// sendCommitList sends commitList to the client as a string slice.
 func (c *CommitList) sendCommitList() error {
 	metadataList := c.storage.CommitList()
 	err := c.comm.SendStringSlice(metadataList)

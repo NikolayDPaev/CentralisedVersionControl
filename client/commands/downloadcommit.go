@@ -11,7 +11,7 @@ import (
 
 var ErrInvalidCommitId = errors.New("invalid commit ID")
 
-// Implements the download commit operation
+// Download implements the download commit operation
 type Download struct {
 	comm     netio.Communicator
 	localcpy fileio.Localcopy
@@ -23,7 +23,7 @@ func NewDownload(comm netio.Communicator, localcpy fileio.Localcopy, opcode, okc
 	return &Download{comm, localcpy, opcode, okcode}
 }
 
-// Deserializes a commit from the communicator.
+// readCommit deserializes a commit from the communicator.
 // Returns new clientcommit or error.
 func (d *Download) readCommit(id string, comm netio.Communicator) (*clientcommit.Commit, error) {
 	receivedId, err := comm.RecvString()
@@ -59,7 +59,7 @@ func (d *Download) readCommit(id string, comm netio.Communicator) (*clientcommit
 	return commit, nil
 }
 
-// Requests specific commit from the server.
+// receiveCommit requests specific commit from the server.
 // Returns no such commit error if the server responds with error code.
 //
 // On success receives commit data that represents the commit, but not the blobs.
@@ -83,7 +83,8 @@ func (d *Download) receiveCommit(commitId string) (*clientcommit.Commit, error) 
 	return commit, nil
 }
 
-// Returns map[hash]path that contains the blobs that are part of the commit but are missing locally.
+// getMissingFiles returns map[hash]path that contains the blobs
+// that are part of the commit but are missing locally.
 func (d *Download) getMissingFiles(c *clientcommit.Commit) (map[string]string, error) {
 	missingFileMap := make(map[string]string, len(c.FileSortedSlice)/2)
 
@@ -101,7 +102,7 @@ func (d *Download) getMissingFiles(c *clientcommit.Commit) (map[string]string, e
 	return missingFileMap, nil
 }
 
-// Invokes ReceiveBlob method of the localcopy package on every entry in the missingFilesMap
+// receiveBlobs invokes ReceiveBlob method of the localcopy package on every entry in the missingFilesMap.
 func (d *Download) receiveBlobs(missingFilesMap map[string]string) error {
 	for range missingFilesMap {
 		blobId, err := d.comm.RecvString()
@@ -114,7 +115,7 @@ func (d *Download) receiveBlobs(missingFilesMap map[string]string) error {
 	return nil
 }
 
-// Main method that encapsulates all the logic behind downlonading a commit.
+// DownloadCommit is the package main method that encapsulates all the logic behind downlonading a commit.
 // Requests the commit, reads it, requests the locally missing blobs and then downloads them.
 // If any operation fails - returns error
 func (d *Download) DownloadCommit(commitId string) error {
